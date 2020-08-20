@@ -1,0 +1,19 @@
+apply plugin: 'java'
+
+buildscript {
+    dependencies {
+        classpath 'com.sri.gradle:daikon-gradle-plugin:1.0'
+    }
+}
+
+// tag::apply-configure-plugin[]
+apply plugin: 'com.sri.gradle.daikon'
+
+runDaikon {
+    daikonJar = file("libs/daikon.jar")
+    outputDir = file("${projectDir}/src/test/resources")
+    testClassesPath = "path/to/"
+}
+
+// end::apply-configure-plugin[]
+
