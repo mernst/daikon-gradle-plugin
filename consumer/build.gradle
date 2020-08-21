@@ -10,9 +10,20 @@ buildscript {
 apply plugin: 'com.sri.gradle.daikon'
 
 runDaikon {
-    daikonJar = file("libs/daikon.jar")
-    outputDir = file("${projectDir}/src/test/resources")
-    testClassesPath = "path/to/"
+    neededlibs = file("libs")
+    outputdir = file("${projectDir}/build/daikon-output")
+    driverpackage = "com.foo"
+}
+
+allprojects {
+    repositories {
+        jcenter()
+    }
+}
+
+dependencies {
+    testImplementation 'org.hamcrest:hamcrest:2.2'
+    testImplementation 'junit:junit:4.12'
 }
 
 // end::apply-configure-plugin[]

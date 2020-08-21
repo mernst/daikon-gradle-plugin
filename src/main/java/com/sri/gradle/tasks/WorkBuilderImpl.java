@@ -50,7 +50,7 @@ public class WorkBuilderImpl implements WorkBuilder {
     }
   }
 
-  @Override public OutputBuilder includedSysClasspath(File... files) {
+  @Override public OutputBuilder includedSysClasspath(List<File> files) {
     for (File each : files){
       if (each == null) continue;
       classpathUrls.add(Urls.toURL(each.getAbsolutePath()));

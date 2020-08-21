@@ -1,44 +1,71 @@
 package com.sri.gradle.tasks;
 
 import com.sri.gradle.Constants;
+import com.sri.gradle.utils.Filefinder;
 import java.io.File;
+import java.nio.file.Files;
+import java.util.LinkedList;
+import java.util.List;
+import org.gradle.api.GradleException;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
 public class GenerateLikelyInvariants extends ToolTask {
-  private final DirectoryProperty outputDir;
-  private final RegularFileProperty daikonJar;
-  private final Property<String> testsClassesPath;
+  private final DirectoryProperty outputdir;
+  private final DirectoryProperty neededlibs;
+  private final Property<String> driverpackage;
 
   @SuppressWarnings("UnstableApiUsage")
   public GenerateLikelyInvariants(){
-    this.daikonJar = getProject().getObjects().fileProperty();  // unchecked warning
-    this.outputDir = getProject().getObjects().directoryProperty(); // unchecked warning
-    this.testsClassesPath = getProject().getObjects().property(String.class); // unchecked warning
+    this.neededlibs = getProject().getObjects().directoryProperty();  // unchecked warning
+    this.outputdir = getProject().getObjects().directoryProperty(); // unchecked warning
+    this.driverpackage = getProject().getObjects().property(String.class); // unchecked warning
   }
 
   @TaskAction public void generateLikelyInvariants() {
     final WorkExecutorImpl executor = new WorkExecutorImpl();
 
-    final File inputDir = getProject()
+    final DirectoryProperty buildDir = getProject()
         .getLayout()
-        .getBuildDirectory()
-        .dir(getTestsClassesPath()).get().getAsFile();
-    final File daikonJar = getDaikonJar()
-        .getAsFile()
-        .get();
-    final File outputDir = getOutputDir()
+        .getBuildDirectory();
+
+    final Directory buildMainDir = buildDir.dir(Constants.PATH_TO_BUILD_MAIN_DIR).get();
+    final Directory buildTestDir = buildDir.dir(Constants.PATH_TO_BUILD_TEST_DIR).get();
+
+    final String testpath = getDriverpackage().get().replaceAll("\\.", "/");
+    final File inputDir = buildTestDir.dir(testpath).getAsFile();
+
+    if (!Files.exists(inputDir.toPath())){
+      throw new GradleException("compiled test classes not available");
+    }
+
+    final File dependenciesDir = getNeededlibs()
         .getAsFile()
         .get();
 
+    final List<File> classpath = new LinkedList<>(Filefinder.findJavaJars(dependenciesDir.toPath()));
+    classpath.add(buildMainDir.getAsFile());
+    classpath.add(buildTestDir.getAsFile());
+
+
+    final File outputDir = getOutputdir()
+        .getAsFile()
+        .get();
+
+    if (!Files.exists(outputDir.toPath())){
+      if (!outputDir.mkdir()){
+        throw new GradleException("Unable to create output directory");
+      }
+    }
+
     WorkConfiguration configuration = (ex -> ex
         .generateLikelyInvariants(inputDir)
-        .includedSysClasspath(daikonJar)
+        .includedSysClasspath(classpath)
         .intoDir(outputDir)
     );
 
@@ -52,16 +79,16 @@ public class GenerateLikelyInvariants extends ToolTask {
     getLogger().quiet("Successfully executed task");
   }
 
-  @OutputDirectory public DirectoryProperty getOutputDir() {
-    return this.outputDir;
+  @OutputDirectory public DirectoryProperty getOutputdir() {
+    return this.outputdir;
   }
 
-  @Input public Property<String> getTestsClassesPath() {
-    return this.testsClassesPath;
+  @Input public Property<String> getDriverpackage() {
+    return this.driverpackage;
   }
 
-  @InputFile public RegularFileProperty getDaikonJar() {
-    return this.daikonJar;
+  @InputDirectory public DirectoryProperty getNeededlibs() {
+    return this.neededlibs;
   }
 
   @Override protected String getTaskName() {

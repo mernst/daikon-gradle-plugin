@@ -1,6 +1,8 @@
 package com.sri.gradle.tasks;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 
 public interface WorkBuilder extends OutputBuilder {
   // TODO(has) add more Daikon's options
@@ -17,5 +19,15 @@ public interface WorkBuilder extends OutputBuilder {
    * @param files additional files
    * @return a reference to the task builder
    */
-  OutputBuilder includedSysClasspath(File... files);
+  default OutputBuilder includedSysClasspath(File... files){
+    return includedSysClasspath(Arrays.asList(files));
+  }
+
+  /**
+   * Builds classpath from a list of files
+   *
+   * @param files additional files
+   * @return a reference to the task builder
+   */
+  OutputBuilder includedSysClasspath(List<File> files);
 }

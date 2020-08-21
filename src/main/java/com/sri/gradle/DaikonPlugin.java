@@ -36,9 +36,9 @@ public class DaikonPlugin implements Plugin<Project> {
     mainTask.setDescription(DAIKON_PLUGIN_DESCRIPTION);
     mainTask.dependsOn("assemble");
 
-    mainTask.getDaikonJar().set(extension.getDaikonJar());
-    mainTask.getOutputDir().set(extension.getOutputDir());
-    mainTask.getTestsClassesPath().set(extension.getTestClassesPath());
+    mainTask.getNeededlibs().set(extension.getNeededlibs());
+    mainTask.getOutputdir().set(extension.getOutputdir());
+    mainTask.getDriverpackage().set(extension.getDriverpackage());
 
     return mainTask;
   }

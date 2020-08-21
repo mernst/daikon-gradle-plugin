@@ -5,7 +5,7 @@ import com.sri.gradle.internal.Chicory;
 import com.sri.gradle.internal.Daikon;
 import com.sri.gradle.internal.DynComp;
 import com.sri.gradle.utils.Immutable;
-import com.sri.gradle.utils.Javafinder;
+import com.sri.gradle.utils.Filefinder;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -16,7 +16,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class WorkExecutorImpl implements WorkExecutor {
-  static final String TEST_DRIVER = "TestDriver.class";
+  static final String TEST_DRIVER = "TestDriver";
 
   private final List<Throwable> encounteredErrors;
   private final List<WorkBuilderImpl> workBuilders;
@@ -55,12 +55,12 @@ public class WorkExecutorImpl implements WorkExecutor {
     final Path outputDir = each.getOutputDir();
     final List<URL> classpath = each.getClasspath();
 
-    final List<File>    allTestClasses  = Javafinder.findJavaClasses(classesDir);
+    final List<File>    allTestClasses  = Filefinder.findJavaClasses(classesDir);
     final List<String>  allQualifiedClasses = getFullyQualifiedNames(allTestClasses);
 
-    String mainClass  = allTestClasses.stream()
-        .filter(f -> f.getName().endsWith(TEST_DRIVER))
-        .map(File::getName).findFirst().orElse(null);
+    String mainClass  = allQualifiedClasses.stream()
+        .filter(f -> f.endsWith(TEST_DRIVER))
+        .findFirst().orElse(null);
 
     if(mainClass == null){
       System.out.println("Not main class for DynComp operation");
@@ -69,30 +69,39 @@ public class WorkExecutorImpl implements WorkExecutor {
 
     mainClass = mainClass.replace(".class", "");
 
+    final String prefix = mainClass.substring(mainClass.lastIndexOf('.') + 1);
+
     executeDynComp(mainClass, allQualifiedClasses, classpath, outputDir);
-    executeChicory(mainClass, allQualifiedClasses, classpath, outputDir);
-    executeDaikon(mainClass, classpath, outputDir);
+    executeChicory(mainClass, prefix, allQualifiedClasses, classpath, outputDir);
+    executeDaikon(mainClass, prefix, classpath, outputDir);
   }
 
-  private static void executeDaikon(String mainClass, List<URL> classpath, Path outputDir) {
+  private static void executeDaikon(String mainClass, String namePrefix, List<URL> classpath, Path outputDir) {
     final Daikon daikon = new Daikon()
         .setClasspath(classpath)
         .setWorkingDirectory(outputDir)
-        .setDtraceFile(outputDir, mainClass + ".dtrace.gz")
-        .setStandardOutput(mainClass + ".inv.gz");
-    daikon.execute();
+        .setDtraceFile(outputDir, namePrefix + ".dtrace.gz")
+        .setStandardOutput(namePrefix + ".inv.gz");
+    final List<String> output = daikon.execute();
+    if (!output.isEmpty()){
+      output.forEach(System.out::println);
+    }
   }
 
-  private static void executeChicory(String mainClass, List<String> allQualifiedClasses,
+  private static void executeChicory(String mainClass, String namePrefix, List<String> allQualifiedClasses,
       List<URL> classpath, Path outputDir) {
     final Chicory chicory = new Chicory()
         .setClasspath(classpath)
         .setMainClass(mainClass)
         .selectedClasses(allQualifiedClasses)
         .setOutputDirectory(outputDir)
-        .setComparabilityFile(outputDir, mainClass + ".decls-DynComp")
+        .setComparabilityFile(outputDir, namePrefix + ".decls-DynComp")
         .setWorkingDirectory(outputDir);
-    chicory.execute();
+
+    final List<String> output = chicory.execute();
+    if (!output.isEmpty()){
+      output.forEach(System.out::println);
+    }
   }
 
   private static void executeDynComp(String mainClass, List<String> allQualifiedClasses,
@@ -103,7 +112,10 @@ public class WorkExecutorImpl implements WorkExecutor {
         .selectedClasses(allQualifiedClasses)
         .setOutputDirectory(outputDir)
         .setWorkingDirectory(outputDir);
-    dynComp.execute();
+    final List<String> output = dynComp.execute();
+    if (!output.isEmpty()){
+      output.forEach(System.out::println);
+    }
   }
 
 
@@ -112,10 +124,11 @@ public class WorkExecutorImpl implements WorkExecutor {
       try {
         final String canonicalPath = f.getCanonicalPath();
         final String deletingPrefix = canonicalPath
-            .substring(0, f.getCanonicalPath().indexOf(Constants.PATH_TO_SRC_DIR)) + Constants.PATH_TO_SRC_DIR + "/";
+            .substring(0, f.getCanonicalPath().indexOf(Constants.PATH_TO_BUILD_TEST_DIR)) + Constants.PATH_TO_BUILD_TEST_DIR
+            + "/";
 
         return canonicalPath.replace(deletingPrefix, "")
-            .replaceAll(".java","")
+            .replaceAll(".class","")
             .replaceAll("/",".");
       } catch (IOException ignored){}
       return null;
