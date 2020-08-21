@@ -15,13 +15,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class WorkExecutorImpl implements WorkExecutor {
+public class TaskExecutorImpl implements TaskExecutor {
   static final String TEST_DRIVER = "TestDriver";
 
   private final List<Throwable> encounteredErrors;
-  private final List<WorkBuilderImpl> workBuilders;
+  private final List<TaskBuilderImpl> workBuilders;
 
-  public WorkExecutorImpl(){
+  public TaskExecutorImpl(){
     this.encounteredErrors = new LinkedList<>();
     this.workBuilders = new LinkedList<>();
   }
@@ -30,8 +30,8 @@ public class WorkExecutorImpl implements WorkExecutor {
     Optional.ofNullable(cause).ifPresent(this.encounteredErrors::add);
   }
 
-  @Override public WorkBuilder generateLikelyInvariants(File testClassesDir) {
-    final WorkBuilderImpl builder = new WorkBuilderImpl(testClassesDir.toPath(), this);
+  @Override public TaskBuilder runDaikonOn(File testClassesDir) {
+    final TaskBuilderImpl builder = new TaskBuilderImpl(testClassesDir.toPath(), this);
     workBuilders.add(builder);
     return builder;
   }
@@ -43,14 +43,14 @@ public class WorkExecutorImpl implements WorkExecutor {
       throw new ConfigurationError(encounteredErrors);
     }
 
-    for (WorkBuilderImpl each : workBuilders){
+    for (TaskBuilderImpl each : workBuilders){
       // a work builder configures a work executor
       // so now we apply this configuration
       applyBuiltConfiguration(each);
     }
   }
 
-  private static void applyBuiltConfiguration(WorkBuilderImpl each) {
+  private static void applyBuiltConfiguration(TaskBuilderImpl each) {
     final Path classesDir = each.getTestClassesDir();
     final Path outputDir = each.getOutputDir();
     final List<URL> classpath = each.getClasspath();

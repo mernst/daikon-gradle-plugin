@@ -8,13 +8,13 @@ import java.util.Formatter;
 import java.util.List;
 
 /**
- * Wraps DyComp, Chicory, and Daikon into a single work:
+ * Wraps DyComp, Chicory, and Daikon into a single task:
  *
- * generateLikelyInvariants(path/to/test/classes)
- *  .givenSysClasspath(file1, file2, ...)
- *  .intoDir(..)
+ * runDaikonOn(path/to/test/classes)
+ *  .withClasspath(file1, file2, ...)
+ *  .toDir(..)
  */
-public interface WorkExecutor {
+public interface TaskExecutor {
   /**
    * Caches an error.
    * @param cause thrown exception.
@@ -26,7 +26,7 @@ public interface WorkExecutor {
    *
    * @param configuration install configuration into task executor.
    */
-  default void install(WorkConfiguration configuration){
+  default void install(TaskConfiguration configuration){
     configuration.configure(this);
   }
 
@@ -36,9 +36,9 @@ public interface WorkExecutor {
    * be already available.
    *
    * @param testClassesDir where to look for .class files.
-   * @return a new WorkBuilder object.
+   * @return a new TaskBuilder object.
    */
-  WorkBuilder generateLikelyInvariants(File testClassesDir);
+  TaskBuilder runDaikonOn(File testClassesDir);
 
   /**
    * Executes installed configuration
@@ -57,7 +57,7 @@ public interface WorkExecutor {
       }
 
       final Formatter messageFormatter = new Formatter();
-      messageFormatter.format("Work Opening configuration errors:%n%n");
+      messageFormatter.format("Task configuration errors:%n%n");
       int index = 1;
 
       for (Throwable errorMessage : encounteredErrors) {

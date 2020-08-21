@@ -12,7 +12,7 @@ public class Constants {
   public static final String PATH_TO_BUILD_CLASSES = "classes/";
   public static final String PATH_TO_BUILD_TEST_DIR = PATH_TO_BUILD_CLASSES + "java/test";
   public static final String PATH_TO_BUILD_MAIN_DIR = PATH_TO_BUILD_CLASSES + "java/main";
-  public static final String TASK_GEN_LIKELY_INVARIANTS = "generateLikelyInvariants";
+  public static final String TASK_RUN_DAIKON = "daikonRun";
   public static final String TASK_CHECK_FOR_DAIKON = "daikonCheck";
   public static final String TASK_CHECK = "check";
 }

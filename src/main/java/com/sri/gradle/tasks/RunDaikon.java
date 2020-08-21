@@ -6,6 +6,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
@@ -15,20 +16,20 @@ import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
-public class GenerateLikelyInvariants extends ToolTask {
+public class RunDaikon extends NamedTask {
   private final DirectoryProperty outputdir;
   private final DirectoryProperty neededlibs;
   private final Property<String> driverpackage;
 
   @SuppressWarnings("UnstableApiUsage")
-  public GenerateLikelyInvariants(){
+  public RunDaikon(){
     this.neededlibs = getProject().getObjects().directoryProperty();  // unchecked warning
     this.outputdir = getProject().getObjects().directoryProperty(); // unchecked warning
     this.driverpackage = getProject().getObjects().property(String.class); // unchecked warning
   }
 
-  @TaskAction public void generateLikelyInvariants() {
-    final WorkExecutorImpl executor = new WorkExecutorImpl();
+  @TaskAction public void daikonRun() {
+    final TaskExecutorImpl executor = new TaskExecutorImpl();
 
     final DirectoryProperty buildDir = getProject()
         .getLayout()
@@ -40,9 +41,6 @@ public class GenerateLikelyInvariants extends ToolTask {
     final String testpath = getDriverpackage().get().replaceAll("\\.", "/");
     final File inputDir = buildTestDir.dir(testpath).getAsFile();
 
-    if (!Files.exists(inputDir.toPath())){
-      throw new GradleException("compiled test classes not available");
-    }
 
     final File dependenciesDir = getNeededlibs()
         .getAsFile()
@@ -63,16 +61,11 @@ public class GenerateLikelyInvariants extends ToolTask {
       }
     }
 
-    WorkConfiguration configuration = (ex -> ex
-        .generateLikelyInvariants(inputDir)
-        .includedSysClasspath(classpath)
-        .intoDir(outputDir)
-    );
+    final RunDaikonConfiguration config = new RunDaikonConfiguration(inputDir, classpath, outputDir);
+    getLogger().quiet("Created RunDaikon task configuration");
 
-    getLogger().quiet("Created task configuration");
-
-    executor.install(configuration);
-    getLogger().quiet("Configured GenerateLikelyInvariants task");
+    executor.install(config);
+    getLogger().quiet("Configured RunDaikon task");
 
     getLogger().quiet("About to execute task");
     executor.execute();
@@ -92,6 +85,59 @@ public class GenerateLikelyInvariants extends ToolTask {
   }
 
   @Override protected String getTaskName() {
-    return Constants.TASK_GEN_LIKELY_INVARIANTS;
+    return Constants.TASK_RUN_DAIKON;
+  }
+
+
+  static class RunDaikonConfiguration extends AbstractConfiguration {
+
+    private final File inputDir;
+    private final List<File> classpath;
+    private final File outputDir;
+
+    RunDaikonConfiguration(File inputDir, List<File> classpath, File outputDir){
+      this.inputDir = inputDir;
+      this.classpath = classpath;
+      this.outputDir = outputDir;
+    }
+
+    @Override protected void configure() {
+      runDaikonOn(inputDir)
+          .withClasspath(classpath)
+          .toDir(outputDir);
+    }
+  }
+
+  static abstract class AbstractConfiguration implements TaskConfiguration {
+    TaskExecutor executor;
+
+    @Override public final synchronized void configure(TaskExecutor executor) {
+      try {
+        if (this.executor != null){
+          throw new IllegalStateException("executor already available");
+        }
+
+        this.executor = Objects.requireNonNull(executor);
+        configure();
+      } finally {
+        this.executor = null;
+      }
+    }
+
+    protected abstract void configure();
+
+    /**
+     * @see TaskExecutor#runDaikonOn(File)
+     */
+    protected TaskBuilder runDaikonOn(File testClassesDir){
+      return executor.runDaikonOn(testClassesDir);
+    }
+
+    /**
+     * @see TaskExecutor#addError(Throwable)
+     */
+    protected void addError(Throwable t) {
+      executor.addError(t);
+    }
   }
 }

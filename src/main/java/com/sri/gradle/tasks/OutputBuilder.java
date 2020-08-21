@@ -8,5 +8,5 @@ public interface OutputBuilder {
    *
    * @param outputDir the path to this work's output directory.
    */
-  void intoDir(File outputDir);
+  void toDir(File outputDir);
 }

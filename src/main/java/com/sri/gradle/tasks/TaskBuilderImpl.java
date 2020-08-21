@@ -3,20 +3,21 @@ package com.sri.gradle.tasks;
 import com.sri.gradle.utils.Urls;
 import java.io.File;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
 
-public class WorkBuilderImpl implements WorkBuilder {
+public class TaskBuilderImpl implements TaskBuilder, OutputBuilder {
 
-  private final WorkExecutorImpl executor;
+  private final TaskExecutorImpl executor;
 
   private final Path testClassesDir;
   private Path outputDir;
 
   private final List<URL> classpathUrls;
 
-  public WorkBuilderImpl(Path testClassesDir, WorkExecutorImpl executor){
+  public TaskBuilderImpl(Path testClassesDir, TaskExecutorImpl executor){
     this.executor = executor;
     this.testClassesDir = testClassesDir;
     this.outputDir = null;
@@ -35,9 +36,15 @@ public class WorkBuilderImpl implements WorkBuilder {
     return classpathUrls;
   }
 
-  @Override public void intoDir(File outputDir) {
-    if (outputDir == null){
-      executor.addError(new NullPointerException("output directory is null"));
+  @Override public void toDir(File outputDir) {
+
+    if (getTestClassesDir() == null || !Files.exists(getTestClassesDir())){
+      executor.addError(new NullPointerException("input directory is null or does not exist"));
+      return;
+    }
+
+    if (outputDir == null || !Files.exists(outputDir.toPath())){
+      executor.addError(new NullPointerException("output directory is null or does exist"));
       return;
     }
 
@@ -45,12 +52,12 @@ public class WorkBuilderImpl implements WorkBuilder {
       this.outputDir = outputDir.toPath();
     }
 
-    if (classpathUrls.isEmpty()){
+    if (getClasspath().isEmpty()){
       executor.addError(new IllegalArgumentException("classpath is empty"));
     }
   }
 
-  @Override public OutputBuilder includedSysClasspath(List<File> files) {
+  @Override public OutputBuilder withClasspath(List<File> files) {
     for (File each : files){
       if (each == null) continue;
       classpathUrls.add(Urls.toURL(each.getAbsolutePath()));

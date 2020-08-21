@@ -6,7 +6,7 @@ import java.io.File;
 import org.gradle.api.GradleException;
 import org.gradle.api.tasks.TaskAction;
 
-public class CheckForDaikon extends ToolTask {
+public class CheckForDaikon extends NamedTask {
 
   @TaskAction public void checkForDaikon(){
     try {
