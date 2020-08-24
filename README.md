@@ -47,4 +47,4 @@ runDaikon {
 
 ## Task
 
-* `generateLikelyInvariants` - runs Daikon workflow'.
+* `daikonRun` - runs Daikon workflow'.
