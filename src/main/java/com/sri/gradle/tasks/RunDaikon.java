@@ -1,6 +1,6 @@
 package com.sri.gradle.tasks;
 
-import com.sri.gradle.Constants;
+import com.sri.gradle.Options;
 import com.sri.gradle.utils.Filefinder;
 import java.io.File;
 import java.nio.file.Files;
@@ -16,7 +16,7 @@ import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
-public class RunDaikon extends NamedTask {
+public class RunDaikon extends AbstractNamedTask {
   private final DirectoryProperty outputdir;
   private final DirectoryProperty neededlibs;
   private final Property<String> driverpackage;
@@ -35,8 +35,8 @@ public class RunDaikon extends NamedTask {
         .getLayout()
         .getBuildDirectory();
 
-    final Directory buildMainDir = buildDir.dir(Constants.PATH_TO_BUILD_MAIN_DIR).get();
-    final Directory buildTestDir = buildDir.dir(Constants.PATH_TO_BUILD_TEST_DIR).get();
+    final Directory buildMainDir = buildDir.dir(Options.PROJECT_MAIN_CLASS_DIR.value()).get();
+    final Directory buildTestDir = buildDir.dir(Options.PROJECT_TEST_CLASS_DIR.value()).get();
 
     final String testpath = getDriverpackage().get().replaceAll("\\.", "/");
     final File inputDir = buildTestDir.dir(testpath).getAsFile();
@@ -85,7 +85,7 @@ public class RunDaikon extends NamedTask {
   }
 
   @Override protected String getTaskName() {
-    return Constants.TASK_RUN_DAIKON;
+    return Options.DAIKON_TASK.value();
   }
 
 

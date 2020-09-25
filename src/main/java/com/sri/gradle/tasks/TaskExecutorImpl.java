@@ -1,11 +1,11 @@
 package com.sri.gradle.tasks;
 
-import com.sri.gradle.Constants;
+import com.sri.gradle.Options;
 import com.sri.gradle.internal.Chicory;
 import com.sri.gradle.internal.Daikon;
 import com.sri.gradle.internal.DynComp;
-import com.sri.gradle.utils.Immutable;
 import com.sri.gradle.utils.Filefinder;
+import com.sri.gradle.utils.ImmutableStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -36,11 +36,11 @@ public class TaskExecutorImpl implements TaskExecutor {
     return builder;
   }
 
-  @Override public void execute() throws ConfigurationError {
+  @Override public void execute() throws TaskConfigurationError {
 
     // Blow up if we encountered errors.
     if (!encounteredErrors.isEmpty()) {
-      throw new ConfigurationError(encounteredErrors);
+      throw new TaskConfigurationError(encounteredErrors);
     }
 
     for (TaskBuilderImpl each : workBuilders){
@@ -120,11 +120,11 @@ public class TaskExecutorImpl implements TaskExecutor {
 
 
   public static List<String> getFullyQualifiedNames(List<File> javaFiles){
-    return Immutable.listOf(javaFiles.stream().map(f -> {
+    return ImmutableStream.listCopyOf(javaFiles.stream().map(f -> {
       try {
         final String canonicalPath = f.getCanonicalPath();
         final String deletingPrefix = canonicalPath
-            .substring(0, f.getCanonicalPath().indexOf(Constants.PATH_TO_BUILD_TEST_DIR)) + Constants.PATH_TO_BUILD_TEST_DIR
+            .substring(0, f.getCanonicalPath().indexOf(Options.PROJECT_TEST_CLASS_DIR.value())) + Options.PROJECT_TEST_CLASS_DIR.value()
             + "/";
 
         return canonicalPath.replace(deletingPrefix, "")

@@ -1,11 +1,6 @@
 package com.sri.gradle;
 
-import static com.sri.gradle.Constants.DAIKON_PLUGIN_DESCRIPTION;
-import static com.sri.gradle.Constants.EXTENSION_DAIKON_PLUGIN_NAME;
-import static com.sri.gradle.Constants.GROUP;
-import static com.sri.gradle.Constants.TASK_CHECK_FOR_DAIKON;
-import static com.sri.gradle.Constants.TASK_RUN_DAIKON;
-
+import com.sri.gradle.tasks.AbstractNamedTask;
 import com.sri.gradle.tasks.CheckForDaikon;
 import com.sri.gradle.tasks.RunDaikon;
 import org.gradle.api.Plugin;
@@ -16,25 +11,26 @@ public class DaikonPlugin implements Plugin<Project> {
 
   @Override public void apply(Project project) {
     DaikonPluginExtension extension = project.getExtensions().create(
-        EXTENSION_DAIKON_PLUGIN_NAME, DaikonPluginExtension.class, project);
+        Options.PLUGIN_EXTENSION.value(), DaikonPluginExtension.class, project);
 
     final CheckForDaikon checkDaikonInstallation = createCheckForDaikon(project);
+
     final RunDaikon mainTask = createRunDaikonTask(project, extension);
     mainTask.dependsOn(checkDaikonInstallation);
-    makeTaskRunWithCheck(project, mainTask);
+    getCheckedAndCarryOn(project, mainTask);
 
     project.getLogger().quiet("Executing " + mainTask.getName());
   }
 
-  private static void makeTaskRunWithCheck(Project project, Task task) {
-    project.getTasksByName(Constants.TASK_CHECK, false).forEach(it -> it.dependsOn(task));
+  private static void getCheckedAndCarryOn(Project project, Task task) {
+    project.getTasksByName(Options.CHECK_TASK.value(), false).forEach(it -> it.dependsOn(task));
   }
 
   private RunDaikon createRunDaikonTask(Project project, DaikonPluginExtension extension) {
-    final RunDaikon mainTask = project.getTasks().create(TASK_RUN_DAIKON, RunDaikon.class);
-    mainTask.setGroup(GROUP);
-    mainTask.setDescription(DAIKON_PLUGIN_DESCRIPTION);
-    mainTask.dependsOn("assemble");
+    final RunDaikon mainTask = project.getTasks().create(Options.DAIKON_TASK.value(), RunDaikon.class);
+    mainTask.setGroup(Options.GROUP.value());
+    mainTask.setDescription(Options.PLUGIN_DESCRIPTION.value());
+    mainTask.dependsOn(Options.ASSEMBLE_TASK.value());
 
     mainTask.getNeededlibs().set(extension.getNeededlibs());
     mainTask.getOutputdir().set(extension.getOutputdir());
@@ -44,11 +40,16 @@ public class DaikonPlugin implements Plugin<Project> {
   }
 
   private CheckForDaikon createCheckForDaikon(Project project){
-    final CheckForDaikon checkForDaikon = project
-        .getTasks()
-        .create(TASK_CHECK_FOR_DAIKON, CheckForDaikon.class);
-    checkForDaikon.setGroup(GROUP);
-    return checkForDaikon;
+    // Chicory and DynComp can be accessed thru daikon.jar;
+    // meaning if daikon.jar is there we can assume they are there too
+    return createCheckTask(project, Options.CHECK_DAIKON_TASK.value(), CheckForDaikon.class);
+  }
+
+  @SuppressWarnings("SameParameterValue")
+  private static <T extends AbstractNamedTask> T createCheckTask(Project project, String taskName, Class<T> taskClass){
+    final T checkTask = project.getTasks().create(taskName, taskClass);
+    checkTask.setGroup(Options.GROUP.value());
+    return checkTask;
   }
 
 }

@@ -1,5 +1,12 @@
+pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = 'consumer'
 
 // tag::include-build[]
-includeBuild './../../daikon-gradle-plugin'
+//includeBuild './../../daikon-gradle-plugin'
 // end::include-build[]

@@ -43,14 +43,14 @@ public interface TaskExecutor {
   /**
    * Executes installed configuration
    */
-  void execute() throws ConfigurationError;
+  void execute() throws TaskConfigurationError;
 
-  class ConfigurationError extends RuntimeException {
-    ConfigurationError(Collection<Throwable> throwables){
-      super(createErrorMessage(throwables));
+  class TaskConfigurationError extends RuntimeException {
+    TaskConfigurationError(Collection<Throwable> throwables){
+      super(buildErrorMessage(throwables));
     }
 
-    private static String createErrorMessage(Collection<Throwable> errorMessages) {
+    private static String buildErrorMessage(Collection<Throwable> errorMessages) {
       final List<Throwable> encounteredErrors = new ArrayList<>(errorMessages);
       if(!encounteredErrors.isEmpty()){
         encounteredErrors.sort(new ThrowableComparator());

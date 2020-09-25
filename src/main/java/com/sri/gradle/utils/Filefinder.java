@@ -1,5 +1,7 @@
 package com.sri.gradle.utils;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -16,17 +18,6 @@ import java.util.List;
 import java.util.Set;
 
 public class Filefinder {
-  private static final String JAVA  = "java";
-  private static final String CLASS  = "class";
-  private static final String JAR  = "jar";
-
-  private static final PathMatcher  JAVA_MATCHER  = FileSystems.getDefault()
-      .getPathMatcher("glob:*." + JAVA);
-  private static final PathMatcher  CLASS_MATCHER  = FileSystems.getDefault()
-      .getPathMatcher("glob:*." + CLASS);
-  private static final PathMatcher  JAR_MATCHER  = FileSystems.getDefault()
-      .getPathMatcher("glob:*." + JAR);
-
   private Filefinder(){}
 
   /**
@@ -38,9 +29,9 @@ public class Filefinder {
    * @return the list of files matching a given extension.
    */
   public static List<File> findJavaFiles(Path directory, String... exclude){
-    if (!Files.exists(directory)) return Immutable.list();
+    if (!Files.exists(directory)) return ImmutableList.of();
 
-    return findFiles(directory.toFile(), JAVA_MATCHER, JAVA, exclude);
+    return findFiles(directory.toFile(), Dot.JAVA, exclude);
   }
 
   /**
@@ -52,9 +43,9 @@ public class Filefinder {
    * @return the list of files matching a given extension.
    */
   public static List<File> findJavaClasses(Path directory, String... exclude){
-    if (!Files.exists(directory)) return Immutable.list();
+    if (!Files.exists(directory)) return ImmutableList.of();
 
-    return findFiles(directory.toFile(), CLASS_MATCHER, CLASS, exclude);
+    return findFiles(directory.toFile(), Dot.CLASS, exclude);
   }
 
   /**
@@ -66,9 +57,9 @@ public class Filefinder {
    * @return the list of files matching a given extension.
    */
   public static List<File> findJavaJars(Path directory, String... exclude){
-    if (!Files.exists(directory)) return Immutable.list();
+    if (!Files.exists(directory)) return ImmutableList.of();
 
-    return findFiles(directory.toFile(), JAR_MATCHER, JAR, exclude);
+    return findFiles(directory.toFile(), Dot.JAR, exclude);
   }
 
   /**
@@ -77,21 +68,20 @@ public class Filefinder {
    *
    * @param directory directory to access
    * @param matcher file matching strategy
-   * @param ext file extension
    * @param skipHints keywords used to avoid certain files collection.
    * @return the list of files matching a given extension.
    */
-  private static List<File> findFiles(File directory, final PathMatcher matcher, final String ext, String... skipHints){
+  private static List<File> findFiles(File directory, final Dot matcher, String... skipHints){
 
     try {
-      return Immutable.listOf(
-          walkDirectory(directory, matcher, ext, skipHints)
+      return ImmutableList.copyOf(
+          walkDirectory(directory, matcher, skipHints)
       );
     } catch (IOException e) {
       System.err.printf("Error: unable to crawl %s. See %s%n", directory.getName(), e);
     }
 
-    return Immutable.list();
+    return ImmutableList.of();
   }
 
 
@@ -104,12 +94,12 @@ public class Filefinder {
    * @return a list of interesting files
    * @throws IOException unexpected error has occurred.
    */
-  private static List<File> walkDirectory(final File location, final PathMatcher matcher, final String ext, final String... keywords) throws IOException {
+  private static List<File> walkDirectory(final File location, final Dot matcher, final String... keywords) throws IOException {
 
     final Path start = Paths.get(location.toURI());
 
     final List<File>  files   = new ArrayList<>();
-    final Set<String> excluded = Immutable.setOf(Arrays.asList(keywords));
+    final Set<String> excluded = ImmutableSet.copyOf(Arrays.asList(keywords));
 
     try {
       Files.walkFileTree(start, new SimpleFileVisitor<Path>(){
@@ -119,7 +109,7 @@ public class Filefinder {
 
           if(matcher.matches(fileName)){
             final File visitedFile = file.toFile();
-            final String name = visitedFile.getName().replace(("." + ext), "");
+            final String name = visitedFile.getName().replace(("." + matcher.getExt()), "");
 
             if(!isExcluded(name, excluded)){
               files.add(visitedFile);
@@ -144,6 +134,32 @@ public class Filefinder {
     }
 
     return false;
+  }
+
+  enum Dot {
+    JAVA(FileSystems.getDefault().getPathMatcher("glob:*.java"), "java"),
+    CLASS(FileSystems.getDefault().getPathMatcher("glob:*.class"), "class"),
+    JAR(FileSystems.getDefault().getPathMatcher("glob:*.jar"), "jar");
+
+    private final PathMatcher matcher;
+    private final String ext;
+
+    Dot(PathMatcher matcher, String ext){
+      this.matcher = matcher;
+      this.ext = ext;
+    }
+
+    boolean matches(Path file){
+      return getMatcher().matches(file);
+    }
+
+    PathMatcher getMatcher(){
+      return this.matcher;
+    }
+
+    String getExt(){
+      return ext;
+    }
   }
 
 }

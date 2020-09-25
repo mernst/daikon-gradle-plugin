@@ -1,10 +1,12 @@
 package com.sri.gradle.internal;
 
-import com.sri.gradle.Constants;
+import com.sri.gradle.Options;
+import com.sri.gradle.utils.ImmutableStream;
 import java.io.File;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class Daikon extends AbstractTool {
@@ -42,11 +44,19 @@ public class Daikon extends AbstractTool {
           .map(URL::toString)
           .collect(Collectors.joining(File.pathSeparator));
 
-      return getBuilder()
+      List<String> output = getBuilder()
           .arguments("-classpath", classPath)
-          .arguments(Constants.MAIN)
+          .arguments(Options.DAIKON_MAIN_CLASS.value())
           .arguments(getArgs())
           .execute();
+
+      List<String> err = ImmutableStream.listCopyOf(output.stream()
+          .filter(Objects::nonNull)
+          .filter(s -> s.startsWith("Error: Could not find or load main")));
+
+      if (!err.isEmpty()) throw new ToolException(BAD_DAIKON_ERROR);
+
+      return output;
 
     } catch (Exception e){
       throw new ToolException(BAD_DAIKON_ERROR, e);

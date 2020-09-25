@@ -1,5 +1,6 @@
 package com.sri.gradle.utils;
 
+import com.google.common.collect.ImmutableList;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -204,7 +205,7 @@ public class Command {
     }
 
     public List<String> getArgs() {
-      return Immutable.listOf(args);
+      return ImmutableList.copyOf(args);
     }
 
     /**
@@ -214,7 +215,7 @@ public class Command {
      * @return self
      */
     public Builder arguments(Object... args) {
-      return arguments(Immutable.listOf(Arrays.stream(args).map(Object::toString)));
+      return arguments(ImmutableStream.listCopyOf(Arrays.stream(args).map(Object::toString)));
     }
 
     /**
