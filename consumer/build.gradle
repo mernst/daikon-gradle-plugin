@@ -19,7 +19,7 @@ dependencies {
 }
 
 runDaikon {
-    neededlibs = file("libs")
+    requires = file("libs")
     outputdir = file("${projectDir}/build/daikon-output")
-    driverpackage = "com.foo"
+    testdriverpack = "com.foo"
 }

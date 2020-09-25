@@ -7,27 +7,27 @@ import org.gradle.api.provider.Property;
 public class DaikonPluginExtension {
 
   private final DirectoryProperty outputdir;
-  private final DirectoryProperty neededlibs;
-  private final Property<String> driverpackage;
+  private final DirectoryProperty requires;
+  private final Property<String> testdriverpack;
 
 
   @SuppressWarnings("UnstableApiUsage")
   public DaikonPluginExtension(Project project) {
     this.outputdir = project.getObjects().directoryProperty();
-    this.neededlibs = project.getObjects().directoryProperty();
-    this.driverpackage = project.getObjects().property(String.class);
+    this.requires = project.getObjects().directoryProperty();
+    this.testdriverpack = project.getObjects().property(String.class);
   }
 
-  public Property<String> getDriverpackage() {
-    return driverpackage;
+  public Property<String> getTestdriverpack() {
+    return testdriverpack;
   }
 
   public DirectoryProperty getOutputdir() {
     return outputdir;
   }
 
-  public DirectoryProperty getNeededlibs() {
-    return neededlibs;
+  public DirectoryProperty getRequires() {
+    return requires;
   }
 
 }

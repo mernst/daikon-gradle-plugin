@@ -18,14 +18,14 @@ import org.gradle.api.tasks.TaskAction;
 
 public class RunDaikon extends AbstractNamedTask {
   private final DirectoryProperty outputdir;
-  private final DirectoryProperty neededlibs;
-  private final Property<String> driverpackage;
+  private final DirectoryProperty requires;
+  private final Property<String> testdriverpack;
 
   @SuppressWarnings("UnstableApiUsage")
   public RunDaikon(){
-    this.neededlibs = getProject().getObjects().directoryProperty();  // unchecked warning
+    this.requires = getProject().getObjects().directoryProperty();  // unchecked warning
     this.outputdir = getProject().getObjects().directoryProperty(); // unchecked warning
-    this.driverpackage = getProject().getObjects().property(String.class); // unchecked warning
+    this.testdriverpack = getProject().getObjects().property(String.class); // unchecked warning
   }
 
   @TaskAction public void daikonRun() {
@@ -38,11 +38,11 @@ public class RunDaikon extends AbstractNamedTask {
     final Directory buildMainDir = buildDir.dir(Options.PROJECT_MAIN_CLASS_DIR.value()).get();
     final Directory buildTestDir = buildDir.dir(Options.PROJECT_TEST_CLASS_DIR.value()).get();
 
-    final String testpath = getDriverpackage().get().replaceAll("\\.", "/");
+    final String testpath = getTestdriverpack().get().replaceAll("\\.", "/");
     final File inputDir = buildTestDir.dir(testpath).getAsFile();
 
 
-    final File dependenciesDir = getNeededlibs()
+    final File dependenciesDir = getRequires()
         .getAsFile()
         .get();
 
@@ -76,12 +76,12 @@ public class RunDaikon extends AbstractNamedTask {
     return this.outputdir;
   }
 
-  @Input public Property<String> getDriverpackage() {
-    return this.driverpackage;
+  @Input public Property<String> getTestdriverpack() {
+    return this.testdriverpack;
   }
 
-  @InputDirectory public DirectoryProperty getNeededlibs() {
-    return this.neededlibs;
+  @InputDirectory public DirectoryProperty getRequires() {
+    return this.requires;
   }
 
   @Override protected String getTaskName() {

@@ -32,9 +32,9 @@ public class DaikonPlugin implements Plugin<Project> {
     mainTask.setDescription(Options.PLUGIN_DESCRIPTION.value());
     mainTask.dependsOn(Options.ASSEMBLE_TASK.value());
 
-    mainTask.getNeededlibs().set(extension.getNeededlibs());
+    mainTask.getRequires().set(extension.getRequires());
     mainTask.getOutputdir().set(extension.getOutputdir());
-    mainTask.getDriverpackage().set(extension.getDriverpackage());
+    mainTask.getTestdriverpack().set(extension.getTestdriverpack());
 
     return mainTask;
   }
