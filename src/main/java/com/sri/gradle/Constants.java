@@ -3,7 +3,7 @@ package com.sri.gradle;
 public class Constants {
   public static final String ASSEMBLE_TASK = "assemble";
   public static final String CHECK_DAIKON_TASK = "daikonCheck";
-  public static final String CHECK_DAIKON_TASK_DESCRIPTION = "Checks if Daikon is installed in your computer.";
+  public static final String CHECK_DAIKON_TASK_DESCRIPTION = "Checks if Daikon is in your project's classpath.";
   public static final String CHICORY_JAR_FILE = "ChicoryPremain.jar";
   public static final String CHICORY_MAIN_CLASS = "daikon.Chicory";
   public static final String DAIKON_JAR_FILE = "daikon.jar";

@@ -24,6 +24,7 @@ public class DaikonPlugin implements Plugin<Project> {
     final RunDaikon mainTask = project.getTasks().create(Constants.DAIKON_TASK, RunDaikon.class);
     mainTask.setGroup(Constants.GROUP);
     mainTask.setDescription(Constants.PLUGIN_DESCRIPTION);
+    // TODO(has) consider removing this task dependency. Not sure if it's needed.
     mainTask.dependsOn(Constants.ASSEMBLE_TASK);
 
     mainTask.getRequires().set(extension.getRequires());
@@ -34,9 +35,11 @@ public class DaikonPlugin implements Plugin<Project> {
   }
 
   private CheckForDaikon createCheckForDaikon(Project project){
-    // Chicory and DynComp can be accessed thru daikon.jar;
-    // meaning if daikon.jar is there we can assume they are there too
-    return createCheckTask(project, Constants.CHECK_DAIKON_TASK, CheckForDaikon.class);
+    // Chicory and DynComp can be accessed via daikon.jar;
+    // meaning if daikon.jar is in your classpath then we can assume they are there too
+    CheckForDaikon checkTask = createCheckTask(project, Constants.CHECK_DAIKON_TASK, CheckForDaikon.class);
+    checkTask.setDescription(Constants.CHECK_DAIKON_TASK_DESCRIPTION);
+    return checkTask;
   }
 
   @SuppressWarnings("SameParameterValue")
