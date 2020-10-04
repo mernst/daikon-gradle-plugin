@@ -15,7 +15,7 @@ public class DaikonPlugin implements Plugin<Project> {
     final CheckForDaikon checkDaikonInstallation = createCheckForDaikon(project);
 
     final RunDaikon mainTask = createRunDaikonTask(project, extension);
-    mainTask.dependsOn(checkDaikonInstallation);
+    mainTask.dependsOn(checkDaikonInstallation, "build");
 
     project.getLogger().quiet("Executing " + mainTask.getName());
   }
