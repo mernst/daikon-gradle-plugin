@@ -59,6 +59,17 @@ pluginManagement {
 }
 ```
 
+Your `settings.gradle` file must contain:
+
+```
+pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+    }
+}
+```
+
 ## License
 
     Copyright (C) 2020 SRI International
