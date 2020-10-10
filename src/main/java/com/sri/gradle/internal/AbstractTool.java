@@ -15,7 +15,7 @@ public abstract class AbstractTool implements Tool {
 
   private final Command.Builder builder;
 
-  private final List<URL> classpathUrls;
+  private final List<URL> classpathUrls = new LinkedList<>();
   private Object[] args = new Object[0];
 
   public AbstractTool() {
@@ -23,8 +23,6 @@ public abstract class AbstractTool implements Tool {
         .arguments("java")
         .arguments("-Xmx4G")
         .permitNonZeroExitStatus();
-
-    this.classpathUrls = new LinkedList<>();
   }
 
   public Object[] getArgs() {
@@ -38,7 +36,7 @@ public abstract class AbstractTool implements Tool {
   }
 
   @Override
-  public Tool setToolJar(File toolJar) {
+  public Tool addToolJarToClasspath(File toolJar) {
     getClasspath().add(Urls.toURL(toolJar.getAbsolutePath()));
     return this;
   }
