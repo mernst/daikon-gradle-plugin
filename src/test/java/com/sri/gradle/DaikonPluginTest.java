@@ -1,7 +1,7 @@
 package com.sri.gradle;
 
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -18,19 +18,28 @@ public class DaikonPluginTest {
     Path dir = new File("src/main/java/com/sri/gradle/utils").toPath();
     System.out.println(dir);
     List<File> filesAvailable = Filefinder.findJavaFiles(dir);
-    assertThat(filesAvailable.size(), is(5));
+
+    final List<String> output = Command.create()
+        .workingDirectory(dir.toFile())
+        .arguments("ls")
+        .execute();
+
+    assertThat(filesAvailable.size(), is(output.size()));
   }
 
   @Test public void testCommandBuilder() {
-    List<String> filesAvailable = Command.create().arguments("ls")
+    List<String> echoResult = Command.create()
+        .workingDirectory(Constants.USER_WORKING_DIR)
+        .arguments("echo", "hello")
         .permitNonZeroExitStatus().execute();
 
-    assertThat(filesAvailable.size(), is(9));
+    assertThat(echoResult.size(), is(1));
+    assertEquals(echoResult.get(0), "hello");
   }
 
   @Test public void testFQNExtractor() {
     final String canonicalPath = "daikon-gradle-plugin/consumer/build/classes/java/test/com/foo/FooStuffTestDriver.class";
-    final String fqn = MoreFiles.getFullyQualifiedName(canonicalPath);
+    final String fqn = MoreFiles.getClassName(canonicalPath);
 
     assertNotNull(fqn);
     assertEquals("com.foo.FooStuffTestDriver", fqn);
