@@ -48,7 +48,7 @@ public class MainExecutor {
       spec.setMain(Constants.DAIKON_MAIN_CLASS);
       spec.setArgs(Arrays.asList(daikonSpec.getArgs()));
       daikonSpec.getConfigureFork().forEach(forkAction -> forkAction.execute(spec));
-      project.getLogger().quiet(getEscapedCmdLine(spec));
+      project.getLogger().debug(getEscapedCmdLine(spec));
     });
   }
 
@@ -80,7 +80,7 @@ public class MainExecutor {
       spec.setMain(Constants.DYN_COMP_MAIN_CLASS);
       spec.setArgs(Arrays.asList(dynCompSpec.getArgs()));
       dynCompSpec.getConfigureFork().forEach(forkAction -> forkAction.execute(spec));
-      project.getLogger().quiet(getEscapedCmdLine(spec));
+      project.getLogger().debug(getEscapedCmdLine(spec));
     });
   }
 
@@ -112,7 +112,7 @@ public class MainExecutor {
       spec.setMain(Constants.CHICORY_MAIN_CLASS);
       spec.setArgs(Arrays.asList(chicorySpec.getArgs()));
       chicorySpec.getConfigureFork().forEach(forkAction -> forkAction.execute(spec));
-      project.getLogger().quiet(getEscapedCmdLine(spec));
+      project.getLogger().debug(getEscapedCmdLine(spec));
     });
   }
 
