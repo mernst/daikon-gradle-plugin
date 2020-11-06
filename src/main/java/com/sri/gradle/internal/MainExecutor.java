@@ -1,14 +1,19 @@
 package com.sri.gradle.internal;
 
+import com.google.common.collect.Lists;
 import com.sri.gradle.Constants;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
+import org.gradle.process.JavaExecSpec;
 
 public class MainExecutor {
   private final Project project;
@@ -43,7 +48,7 @@ public class MainExecutor {
       spec.setMain(Constants.DAIKON_MAIN_CLASS);
       spec.setArgs(Arrays.asList(daikonSpec.getArgs()));
       daikonSpec.getConfigureFork().forEach(forkAction -> forkAction.execute(spec));
-      project.getLogger().debug(String.join(" ", spec.getCommandLine()));
+      project.getLogger().quiet(getEscapedCmdLine(spec));
     });
   }
 
@@ -75,7 +80,7 @@ public class MainExecutor {
       spec.setMain(Constants.DYN_COMP_MAIN_CLASS);
       spec.setArgs(Arrays.asList(dynCompSpec.getArgs()));
       dynCompSpec.getConfigureFork().forEach(forkAction -> forkAction.execute(spec));
-      project.getLogger().debug(String.join(" ", spec.getCommandLine()));
+      project.getLogger().quiet(getEscapedCmdLine(spec));
     });
   }
 
@@ -107,8 +112,95 @@ public class MainExecutor {
       spec.setMain(Constants.CHICORY_MAIN_CLASS);
       spec.setArgs(Arrays.asList(chicorySpec.getArgs()));
       chicorySpec.getConfigureFork().forEach(forkAction -> forkAction.execute(spec));
-      project.getLogger().debug(String.join(" ", spec.getCommandLine()));
+      project.getLogger().quiet(getEscapedCmdLine(spec));
     });
+  }
+
+
+  static String getEscapedCmdLine(JavaExecSpec spec){
+    return new CmdLine(spec.getExecutable())
+        .setClasspath(spec.getClasspath())
+        .setMain(spec.getMain())
+        .setArgs(spec.getArgs() == null ? Lists.newArrayList() : spec.getArgs())
+        .build();
+  }
+
+  static class CmdLine {
+    final String executable;
+    String classpath;
+    String main;
+    String args;
+
+    CmdLine(String executable){
+      this.executable  = executable;
+      this.classpath  = null;
+      this.main  = null;
+      this.args  = null;
+    }
+
+    CmdLine setClasspath(FileCollection cp){
+      final Collection<String> escapedData = ObjEscaper.escapeIterable(cp);
+      final Iterator<String> iterator = escapedData.iterator();
+
+      final StringBuilder stringBuilder = new StringBuilder();
+      if (iterator.hasNext()) {
+        stringBuilder.append(iterator.next());
+
+        while (iterator.hasNext()) {
+          stringBuilder.append(Constants.PATH_SEPARATOR).append(iterator.next());
+        }
+      }
+
+      this.classpath  = stringBuilder.toString();
+
+      return this;
+    }
+
+    CmdLine setMain(String main){
+      this.main = main;
+      return this;
+    }
+
+    CmdLine setArgs(List<String> strings){
+      List<String> data = Lists.newArrayList();
+
+      for (String each : strings){
+        data.add(ObjEscaper.escape(each));
+      }
+
+      this.args = String.join(" ", data);
+
+      return this;
+    }
+
+
+    String build(){
+      return this.executable
+          + " " + "-cp " + this.classpath + " "
+          + this.main + " "
+          + this.args;
+    }
+  }
+
+  static class ObjEscaper {
+
+    static <T> Collection<String> escapeIterable(Iterable<T> data){
+      final List<String> escapedData = new ArrayList<>();
+      for (T t : data){
+        escapedData.add(escape(t));
+      }
+
+      return escapedData;
+    }
+
+    static String escape(Object object){
+      Object thatObject = object instanceof File ? new File(((File)object).toURI()) : object;
+      return escape(thatObject.toString());
+    }
+
+    static String escape(String path) {
+      return path.replace(" ", "\\ ");
+    }
   }
 
   static class DynCompExecSpecAction implements Action<DynCompExecSpec> {
@@ -131,7 +223,7 @@ public class MainExecutor {
 
     @Override public void execute(DynCompExecSpec spec) {
       spec.setWorkingDir(testClassDir);
-      spec.setOutputDirectory(outputDir);
+      spec.setOutputDirectory(testClassDir.relativize(outputDir));
       spec.setClasspath(project.files(classPath));
       spec.setMain(Constants.DYN_COMP_MAIN_CLASS);
       spec.setSelectedClasses(allClassnames);
@@ -187,8 +279,8 @@ public class MainExecutor {
       spec.setWorkingDir(outputDir);
       spec.setClasspath(project.files(classPath));
       spec.setMain(Constants.DAIKON_MAIN_CLASS);
-      spec.setDtraceFile(classNamePrefix + ".dtrace.gz");
-      spec.setStandardOutput(classNamePrefix + ".inv.gz");
+      spec.setDtraceFile(outputDir, classNamePrefix + ".dtrace.gz");
+      spec.setStandardOutput(outputDir, classNamePrefix + ".inv.gz");
       spec.setForkOptions();
     }
   }

@@ -1,38 +1,17 @@
 package com.sri.gradle.utils;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.sri.gradle.Constants;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFileAttributeView;
-import java.nio.file.attribute.PosixFilePermission;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 public class MoreFiles {
   private MoreFiles() {
     throw new Error("Cannot be instantiated");
-  }
-
-  /**
-   * Gets a file object's posix file permissions.
-   *
-   * @param file the file object
-   * @return set of posix file permissions.
-   */
-  public static Set<PosixFilePermission> getPosixFilePermissions(File file) {
-    try {
-      final PosixFileAttributeView fileAttributes =
-          Files.getFileAttributeView(file.toPath(), PosixFileAttributeView.class);
-      Objects.requireNonNull(fileAttributes);
-      return fileAttributes.readAttributes().permissions();
-    } catch (Exception ignored) {
-      return ImmutableSet.of();
-    }
   }
 
   /**
