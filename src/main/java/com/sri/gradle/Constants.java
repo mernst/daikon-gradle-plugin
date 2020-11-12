@@ -51,7 +51,7 @@ public class Constants {
   public static final File USER_WORKING_DIR = new File(System.getProperty("user.dir"));
   public static final String SPACE = " ";
   public static final String DOUBLE_SPACE = SPACE + SPACE;
-  public static final OutputStream SILENT = new OutputStream() {
+  public static final OutputStream QUIET_OUTPUT = new OutputStream() {
     @Override public void write(int b) throws IOException {
       // nothing;
     }
