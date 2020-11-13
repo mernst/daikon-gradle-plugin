@@ -51,6 +51,11 @@ public class MainExecSpec {
     return workingDirectory;
   }
 
+  protected Path relativizeFile(Path directory, String filename){
+    final Path resolved = directory.resolve(filename);
+    return directory.relativize(resolved);
+  }
+
   public void setArgs(Object... args) {
     if (args == null) {
       this.args = new Object[0];

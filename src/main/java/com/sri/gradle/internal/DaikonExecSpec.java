@@ -4,12 +4,10 @@ import java.nio.file.Path;
 
 public class DaikonExecSpec extends MainExecSpec {
   public void setStandardOutput(Path directory, String filename) {
-    final Path resolved = directory.resolve(filename);
-    args(String.format("%s %s", "-o", directory.relativize(resolved)));
+    args("-o", String.format("%s", relativizeFile(directory, filename)));
   }
 
   public void setDtraceFile(Path directory, String filename) {
-    final Path resolved = directory.resolve(filename);
-    args(String.format("%s", directory.relativize(resolved)));
+    args(String.format("%s", relativizeFile(directory, filename)));
   }
 }

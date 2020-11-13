@@ -37,6 +37,7 @@ public class Constants {
   public static final String CHICORY_MAIN_CLASS = "daikon.Chicory";
   public static final String DAIKON_MAIN_CLASS = "daikon.Daikon";
   public static final String DYN_COMP_MAIN_CLASS = "daikon.DynComp";
+  public static final String PRINT_INVARIANTS_MAIN_CLASS = "daikon.PrintInvariants";
   public static final String CHICORY_JAR_FILE = "ChicoryPremain.jar";
   public static final String DAIKON_JAR_FILE = "daikon.jar";
   public static final String DYN_COMP_PRE_MAIN_JAR_FILE = "dcomp_premain.jar";

@@ -17,6 +17,37 @@ public class MainExecutor {
     this.project = project;
   }
 
+  public void execChicory(List<File> classPath, List<String> allClassnames, String targetClass, String classNamePrefix, Path outputDir){
+    execChicory(new ChicoryExecSpecAction(
+        project,
+        classPath,
+        allClassnames,
+        targetClass,
+        classNamePrefix,
+        outputDir
+    ));
+  }
+
+  public void execChicory(Action<ChicoryExecSpec> action){
+    Objects.requireNonNull(action);
+    final ChicoryExecSpec spec = new ChicoryExecSpec();
+    action.execute(spec);
+    execChicory(spec);
+  }
+
+  public void execChicory(ChicoryExecSpec chicorySpec){
+    Objects.requireNonNull(chicorySpec);
+    final FileCollection fullClasspath = chicorySpec.getClasspath();
+    project.javaexec(spec -> {
+      spec.setStandardOutput(Constants.QUIET_OUTPUT);
+      spec.setWorkingDir(chicorySpec.getWorkingDir());
+      spec.setClasspath(fullClasspath);
+      spec.setMain(Constants.CHICORY_MAIN_CLASS);
+      spec.setArgs(Arrays.asList(chicorySpec.getArgs()));
+      chicorySpec.getConfigureFork().forEach(forkAction -> forkAction.execute(spec));
+    });
+  }
+
   public void execDaikon(String classNamePrefix, List<File> classPath, Path outputDir){
     execDaikon(new DaikonExecSpecAction(
         project,
@@ -43,6 +74,35 @@ public class MainExecutor {
       spec.setMain(Constants.DAIKON_MAIN_CLASS);
       spec.setArgs(Arrays.asList(daikonSpec.getArgs()));
       daikonSpec.getConfigureFork().forEach(forkAction -> forkAction.execute(spec));
+    });
+  }
+
+  public void execPrintDaikonXml(List<File> classPath, String classNamePrefix, Path outputDir){
+    execPrintDaikonXml(new PrintInvariantsExecSpecAction(
+        project,
+        classPath,
+        classNamePrefix,
+        outputDir
+    ));
+  }
+
+  public void execPrintDaikonXml(Action<PrintInvariantsExecSpec> action){
+    Objects.requireNonNull(action);
+    final PrintInvariantsExecSpec spec = new PrintInvariantsExecSpec();
+    action.execute(spec);
+    execPrintDaikonXml(spec);
+  }
+
+  public void execPrintDaikonXml(PrintInvariantsExecSpec printSpec){
+    Objects.requireNonNull(printSpec);
+    final FileCollection fullClasspath = printSpec.getClasspath();
+    project.javaexec(spec -> {
+      spec.setStandardOutput(Constants.QUIET_OUTPUT);
+      spec.setWorkingDir(printSpec.getWorkingDir());
+      spec.setClasspath(fullClasspath);
+      spec.setMain(Constants.PRINT_INVARIANTS_MAIN_CLASS);
+      spec.setArgs(Arrays.asList(printSpec.getArgs()));
+      printSpec.getConfigureFork().forEach(forkAction -> forkAction.execute(spec));
     });
   }
 
@@ -74,37 +134,6 @@ public class MainExecutor {
       spec.setMain(Constants.DYN_COMP_MAIN_CLASS);
       spec.setArgs(Arrays.asList(dynCompSpec.getArgs()));
       dynCompSpec.getConfigureFork().forEach(forkAction -> forkAction.execute(spec));
-    });
-  }
-
-  public void execChicory(List<File> classPath, List<String> allClassnames, String targetClass, String classNamePrefix, Path outputDir){
-    execChicory(new ChicoryExecSpecAction(
-        project,
-        classPath,
-        allClassnames,
-        targetClass,
-        classNamePrefix,
-        outputDir
-    ));
-  }
-
-  public void execChicory(Action<ChicoryExecSpec> action){
-    Objects.requireNonNull(action);
-    final ChicoryExecSpec spec = new ChicoryExecSpec();
-    action.execute(spec);
-    execChicory(spec);
-  }
-
-  public void execChicory(ChicoryExecSpec chicorySpec){
-    Objects.requireNonNull(chicorySpec);
-    final FileCollection fullClasspath = chicorySpec.getClasspath();
-    project.javaexec(spec -> {
-      spec.setStandardOutput(Constants.QUIET_OUTPUT);
-      spec.setWorkingDir(chicorySpec.getWorkingDir());
-      spec.setClasspath(fullClasspath);
-      spec.setMain(Constants.CHICORY_MAIN_CLASS);
-      spec.setArgs(Arrays.asList(chicorySpec.getArgs()));
-      chicorySpec.getConfigureFork().forEach(forkAction -> forkAction.execute(spec));
     });
   }
 
@@ -188,6 +217,30 @@ public class MainExecutor {
       spec.setDtraceFile(outputDir, classNamePrefix + ".dtrace.gz");
       spec.setStandardOutput(outputDir, classNamePrefix + ".inv.gz");
       spec.setForkOptions();
+    }
+  }
+
+  static class PrintInvariantsExecSpecAction implements Action<PrintInvariantsExecSpec> {
+
+    private final Project project;
+    private final List<File> classPath;
+    private final String classNamePrefix;
+    private final Path outputDir;
+
+    PrintInvariantsExecSpecAction(Project project, List<File> classPath, String classNamePrefix, Path outputDir){
+      this.project = project;
+      this.classPath = classPath;
+      this.classNamePrefix = classNamePrefix;
+      this.outputDir = outputDir;
+    }
+
+    @Override public void execute(PrintInvariantsExecSpec spec) {
+      spec.setWorkingDir(outputDir);
+      spec.setClasspath(project.files(classPath));
+      spec.setMain(Constants.PRINT_INVARIANTS_MAIN_CLASS);
+      spec.setXmlOutput(outputDir, classNamePrefix + ".inv.xml");
+      spec.setWrapXml();
+      spec.setInvariantsFile(outputDir, classNamePrefix + ".inv.gz");
     }
   }
 }

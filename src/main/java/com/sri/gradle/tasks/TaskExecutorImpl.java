@@ -125,6 +125,13 @@ public class TaskExecutorImpl implements TaskExecutor {
         outputDir
     );
 
+    // Print invariants
+    mainExecutor.execPrintDaikonXml(
+        classpath,
+        prefix,
+        outputDir
+    );
+
     System.out.println(Constants.SUCCESSFUL_DAIKON_EXECUTION);
   }
 
