@@ -16,7 +16,7 @@ repositories {
     }
 }
 
-group = 'com.sri'
+group = 'com.sri.gradle.daikon'
 version = '0.0.1-SNAPSHOT'
 
 
@@ -26,7 +26,7 @@ gradlePlugin {
             id = 'com.sri.gradle.daikon'
             displayName = 'Daikon Gradle Plugin'
             description = 'Dynamic detection of likely program invariants'
-            implementationClass = 'com.sri.gradle.DaikonPlugin'
+            implementationClass = 'com.sri.gradle.daikon.DaikonPlugin'
         }
     }
 }
