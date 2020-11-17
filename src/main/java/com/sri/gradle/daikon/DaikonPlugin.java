@@ -83,7 +83,7 @@ public class DaikonPlugin implements Plugin<Project> {
     final CompileTestDriverJavaExtension driverExtension =
         aJavaCompile
             .getExtensions()
-            .create("driverExtension", CompileTestDriverJavaExtension.class, project);
+            .create("autoDriverExtension", CompileTestDriverJavaExtension.class, project);
 
     // TODO(has) make this option a configurable option
     driverExtension.setCompileTestDriverSeparately(true);
