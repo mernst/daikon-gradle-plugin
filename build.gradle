@@ -40,5 +40,10 @@ dependencies {
     testImplementation 'org.assertj:assertj-core:3.11.1'
 }
 
+pluginBundle {
+    website = 'http://github.com/SRI-CSL/'
+    vcsUrl = 'https://github.com/SRI-CSL/daikon-gradle-plugin.git'
+    tags = ['daikon', 'invariant detector', 'dynamic detection of likely invariants']
+}
 
 apply from: 'gradle/compile.gradle'
