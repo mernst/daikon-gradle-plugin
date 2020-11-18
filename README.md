@@ -1,18 +1,26 @@
 # Daikon Gradle Plugin
 
-(experimental) daikon gradle plugin
+[![License](https://img.shields.io/badge/license-apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
-This Gradle plug-in creates a task, `daikonRun`, that runs [Daikon](https://plse.cs.washington.edu/daikon/) on Java projects.
-
-TODO: Document what runs the plugin uses for Daikon.  Is it all test runs?
+This Gradle plug-in creates a task, `daikonRun`, that runs [Daikon](https://plse.cs.washington.edu/daikon/) on Java projects' unit tests.
 
 ## Configuration
 
-To use this plug-in, Daikon should be in the `libs` directory (TODO: is it OK for it to be anywhere on the classpath?) and it should be a `file` dependency in your `build.gradle` file.
+To use this plug-in, you must specify the location where the plugin can find Daikon.
 
-### Configuring your project
+In the following example, Daikon is in a project's `libs` directory: 
 
-Add the following to the `build.gradle` file of the project that applies the plugin:
+```groovy
+runDaikon {
+    // the project directory where daikon.jar, ChicoryPremain.jar,
+    // and dcomp_*.jar files exist  
+    requires = file("libs")
+}
+```
+
+Also, you should specific both the Daikon output directory and the test driver package.
+
+You can find an example of this configuration below:
 
 ```groovy
 plugins {
@@ -52,14 +60,24 @@ runDaikon {
 }
 ```
 
-Your `settings.gradle` file must contain:
+## Using a locally-built plugin
 
-    pluginManagement {
-        repositories {
-            mavenLocal()
-            gradlePluginPortal()
-        }
+You can build the plugin locally rather than downloading it from Maven Central.
+
+To build the plugin from source, run `./gradlew build`.
+
+If you want to use a locally-built version of the plugin, you can publish the plugin to your
+local Maven repository by running `./gradlew publishToMavenLocal`. Then, add the following to
+the `settings.gradle` file in the Gradle project that you want to use the plugin:
+
+```
+pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
     }
+}
+```
 
 ## License
 
