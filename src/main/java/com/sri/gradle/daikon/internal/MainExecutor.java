@@ -9,6 +9,7 @@ import java.util.Objects;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
+import org.gradle.process.ExecResult;
 
 public class MainExecutor {
   private final Project project;
@@ -67,7 +68,7 @@ public class MainExecutor {
   public void execDaikon(DaikonExecSpec daikonSpec){
     Objects.requireNonNull(daikonSpec);
     final FileCollection fullClasspath = daikonSpec.getClasspath();
-    project.javaexec(spec -> {
+    final ExecResult result = project.javaexec(spec -> {
       spec.setStandardOutput(Constants.QUIET_OUTPUT);
       spec.setWorkingDir(daikonSpec.getWorkingDir());
       spec.setClasspath(fullClasspath);
@@ -75,6 +76,8 @@ public class MainExecutor {
       spec.setArgs(Arrays.asList(daikonSpec.getArgs()));
       daikonSpec.getConfigureFork().forEach(forkAction -> forkAction.execute(spec));
     });
+
+    result.assertNormalExitValue();
   }
 
   public void execPrintDaikonXml(List<File> classPath, String classNamePrefix, Path outputDir){
@@ -96,7 +99,7 @@ public class MainExecutor {
   public void execPrintDaikonXml(PrintInvariantsExecSpec printSpec){
     Objects.requireNonNull(printSpec);
     final FileCollection fullClasspath = printSpec.getClasspath();
-    project.javaexec(spec -> {
+    final ExecResult result = project.javaexec(spec -> {
       spec.setStandardOutput(Constants.QUIET_OUTPUT);
       spec.setWorkingDir(printSpec.getWorkingDir());
       spec.setClasspath(fullClasspath);
@@ -104,6 +107,8 @@ public class MainExecutor {
       spec.setArgs(Arrays.asList(printSpec.getArgs()));
       printSpec.getConfigureFork().forEach(forkAction -> forkAction.execute(spec));
     });
+
+    result.assertNormalExitValue();
   }
 
   public void execDynComp(List<File> classPath, List<String> allClassnames, String targetClass, Path testClassDir, Path outputDir){
@@ -127,7 +132,7 @@ public class MainExecutor {
   public void execDynComp(DynCompExecSpec dynCompSpec){
     Objects.requireNonNull(dynCompSpec);
     final FileCollection fullClasspath = dynCompSpec.getClasspath();
-    project.javaexec(spec -> {
+    final ExecResult result = project.javaexec(spec -> {
       spec.setStandardOutput(Constants.QUIET_OUTPUT);
       spec.setWorkingDir(dynCompSpec.getWorkingDir());
       spec.setClasspath(fullClasspath);
@@ -135,6 +140,8 @@ public class MainExecutor {
       spec.setArgs(Arrays.asList(dynCompSpec.getArgs()));
       dynCompSpec.getConfigureFork().forEach(forkAction -> forkAction.execute(spec));
     });
+
+    result.assertNormalExitValue();
   }
 
 
