@@ -33,7 +33,7 @@ public class RunDaikon extends AbstractNamedTask {
   }
 
   @TaskAction
-  public void daikonRun() {
+  public void runDaikon() {
     final TaskExecutorImpl executor = new TaskExecutorImpl();
     final JavaProjectHelper projectHelper = new JavaProjectHelper(getProject());
 

@@ -21,7 +21,7 @@ public class Constants {
   public static final String CHECK_DAIKON_TASK = "daikonCheck";
   public static final String CHECK_DAIKON_TASK_DESCRIPTION =
       "Checks if Daikon is in your project's classpath.";
-  public static final String DAIKON_TASK = "daikonRun";
+  public static final String DAIKON_TASK = "runDaikon";
   public static final String DAIKON_TASK_DESCRIPTION = "Runs Daikon invariant detector";
   public static final String CODE_GEN_TASK = "generateTestDriverCode";
   public static final String CODE_GEN_TASK_DESCRIPTION =
@@ -32,6 +32,7 @@ public class Constants {
       Pattern.compile(
           ".+Test\\d*|.+Tests\\d*|Test.+|Tests.+|.+IT|.+ITs|.+TestCase\\d*" + "|.+TestCases\\d*");
   public static final String COMPILE_TEST_DRIVER = "compileTestDriverJava";
+  public static final String OWN_DRIVER = "driver";
 
   // tool related constants
   public static final String CHICORY_MAIN_CLASS = "daikon.Chicory";

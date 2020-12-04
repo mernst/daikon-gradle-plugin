@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
-This Gradle plug-in creates a task, `daikonRun`, that runs [Daikon](https://plse.cs.washington.edu/daikon/) on Java projects' unit tests.
+This Gradle plug-in creates a task, `runDaikon`, that runs [Daikon](https://plse.cs.washington.edu/daikon/) on Java projects' unit tests.
 
 ## Configuration
 
@@ -18,9 +18,9 @@ runDaikon {
 }
 ```
 
-Also, you should specific both the Daikon output directory and the test driver package.
+Also, you should specify both the Daikon output directory and the test driver package.
 
-You can find an example of this configuration below:
+You can find an example of a complete configuration below:
 
 ```groovy
 plugins {
@@ -78,6 +78,19 @@ pluginManagement {
     }
 }
 ```
+
+## Daikon Tasks
+
+The plugin support the following tasks. The main task of this plugin is the `runDaikon` task, which
+runs other supporting tasks, such as `generateTestDriverCode`. The entire list of tasks is presented here:
+
+- `daikonCheck` - Checks if Daikon is in your project's classpath.
+- `generateTestDriverCode` - Generates test driver code that Daikon can execute.
+- `runDaikon` - Detection of likely program invariants using Daikon.
+
+Additional build properties:
+
+-   `-Pdriver` - Tells the plugin to build its own test driver at `build/driver` directory.
 
 ## License
 

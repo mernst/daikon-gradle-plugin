@@ -17,7 +17,7 @@ import org.gradle.api.Task;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.compile.JavaCompile;
 
-@SuppressWarnings({"NullableProblems", "Convert2Lambda"})
+@SuppressWarnings({"NullableProblems", "Convert2Lambda", "unused"})
 public class DaikonPlugin implements Plugin<Project> {
 
   @Override
@@ -73,19 +73,18 @@ public class DaikonPlugin implements Plugin<Project> {
 
     final JavaProjectHelper projectHelper = new JavaProjectHelper(project);
 
-    Optional<JavaCompile> javaCompile =
+    Optional<JavaCompile> javaCompileTask =
         projectHelper.findTask(JavaPlugin.COMPILE_TEST_JAVA_TASK_NAME, JavaCompile.class);
-    if (!javaCompile.isPresent()) {
+    if (!javaCompileTask.isPresent()) {
       throw new GradleException("JavaPlugin is available in this project");
     }
 
-    final JavaCompile aJavaCompile = javaCompile.get();
+    final JavaCompile javaCompile = javaCompileTask.get();
     final CompileTestDriverJavaExtension driverExtension =
-        aJavaCompile
+        javaCompile
             .getExtensions()
             .create("autoDriverExtension", CompileTestDriverJavaExtension.class, project);
 
-    // TODO(has) make this option a configurable option
     driverExtension.setCompileTestDriverSeparately(true);
 
     project
@@ -98,7 +97,10 @@ public class DaikonPlugin implements Plugin<Project> {
         projectHelper.task(Constants.COMPILE_TEST_DRIVER, JavaCompile.class);
     testDriverJavaCompile.dependsOn(genCodeTask);
     final CompileTestJavaTaskMutator compileMutator =
-        new CompileTestJavaTaskMutator(project, aJavaCompile.getClasspath());
+        new CompileTestJavaTaskMutator(
+            project,
+            driverExtension.getCompileTestDriverSeparately(),
+            javaCompile.getClasspath());
 
     // Don't convert to lambda. Java lambdas cannot be used in the plugin
     // only as task inputs (e.g. Task.doFirst, Task.doLast). Whenever a receiver

@@ -163,4 +163,8 @@ public class JavaProjectHelper {
     final String testpath = testDriverPackage.replaceAll("\\.", Constants.FILE_SEPARATOR);
     return getDriverDir(project).toPath().resolve(testpath).toFile();
   }
+
+  public boolean hasProperty(String property){
+    return property != null && !property.isEmpty() && getProject().hasProperty(property);
+  }
 }

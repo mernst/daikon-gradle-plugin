@@ -18,15 +18,22 @@ import org.gradle.api.tasks.compile.JavaCompile;
 @SuppressWarnings("UnstableApiUsage")
 public class CompileTestJavaTaskMutator {
 
+  private final boolean useOwnDriver;
   private final FileCollection compileJavaClasspath;
   private final JavaProjectHelper projectHelper;
 
-  public CompileTestJavaTaskMutator(Project project, FileCollection compileJavaClasspath) {
+  public CompileTestJavaTaskMutator(Project project, boolean useOwnDriver, FileCollection compileJavaClasspath) {
+    this.useOwnDriver = useOwnDriver;
     this.compileJavaClasspath = compileJavaClasspath;
     this.projectHelper = new JavaProjectHelper(project);
   }
 
   public void mutateJavaCompileTask(JavaCompile javaCompile) {
+    if (!useOwnDriver()){
+      getProjectHelper().getProject().getLogger().quiet(Constants.DRIVER_EXIST);
+      return;
+    }
+
     configureCompilerArgs(javaCompile);
     configureClasspath(javaCompile);
     configureSourcesAndDestinations(javaCompile);
@@ -39,7 +46,7 @@ public class CompileTestJavaTaskMutator {
 
   private void configureClasspath(JavaCompile javaCompile) {
     Set<File> runtimeClasspath = getProjectHelper().getRuntimeClasspath();
-    javaCompile.setClasspath(getProjectHelper().getProject().files(this.compileJavaClasspath, runtimeClasspath));
+    javaCompile.setClasspath(getProjectHelper().getProject().files(getCompileJavaClasspath(), runtimeClasspath));
   }
 
   // Setting the sourcepath and source set is necessary when using forked compilation for
@@ -74,7 +81,15 @@ public class CompileTestJavaTaskMutator {
     return new ArrayList<>(javaCompile.getOptions().getCompilerArgs());
   }
 
+  FileCollection getCompileJavaClasspath(){
+    return compileJavaClasspath;
+  }
+
   JavaProjectHelper getProjectHelper(){
     return projectHelper;
+  }
+
+  boolean useOwnDriver(){
+    return useOwnDriver;
   }
 }

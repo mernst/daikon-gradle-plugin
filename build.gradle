@@ -17,8 +17,7 @@ repositories {
 }
 
 group = 'com.sri.gradle.daikon'
-version = '0.0.1-SNAPSHOT'
-
+version = '0.0.2-SNAPSHOT'
 
 gradlePlugin {
     plugins {

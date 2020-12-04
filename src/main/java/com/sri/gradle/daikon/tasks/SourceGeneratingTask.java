@@ -31,6 +31,19 @@ public class SourceGeneratingTask extends AbstractNamedTask {
   @TaskAction
   public void generateTestDriverCode() {
     final JavaProjectHelper projectHelper = new JavaProjectHelper(getProject());
+
+    // Automatically guessing whether there is a test driver in the project
+    // is challenging and error prone. Only the maintainer of a project knows
+    // whether that driver exist and whether that driver can has a main method
+    // Daikon can execute. If the maintainer wants this plugin to take care of
+    // the driver generation then they should indicate that via the property
+    // driver when building the project: -Pdriver. If that property is not
+    // provided, then the generateTestDriverCode task will immediately return.
+    if (!projectHelper.hasProperty(Constants.OWN_DRIVER)){
+      projectHelper.getProject().getLogger().quiet(Constants.DRIVER_EXIST);
+      return;
+    }
+
     final File testDriverOutputDir = projectHelper.getDriverDir();
 
     if (!Files.exists(testDriverOutputDir.toPath())) {
