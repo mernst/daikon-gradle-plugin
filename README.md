@@ -6,27 +6,27 @@ This Gradle plug-in creates a task, `runDaikon`, that runs [Daikon](https://plse
 
 ## Configuration
 
-To use this plug-in, you must specify the location where the plugin can find Daikon.
-
-In the following example, Daikon is in a project's `libs` directory: 
-
-```groovy
-runDaikon {
-    // the project directory where daikon.jar, ChicoryPremain.jar,
-    // and dcomp_*.jar files exist  
-    requires = file("libs")
-}
-```
-
-Also, you should specify both the Daikon output directory and the test driver package.
-
-You can find an example of a complete configuration below:
+To use this plug-in you must apply the Randoop plug-in to the root project’s `build.gradle`:
 
 ```groovy
 plugins {
     id 'java'
     id 'maven-publish'
-    id 'com.sri.gradle.daikon' version '0.0.1-SNAPSHOT'
+    id 'com.sri.gradle.daikon' version '0.0.2-SNAPSHOT'
+}
+```
+
+Then, you must specify you must specify a few configuration parameters in your `runDaikon` configuration.
+For example, the location where the plug-in can find the Daikon tool, the Daikon output directory,
+the test driver package name, etc.
+
+You can find a complete example of this configuration below:
+
+```groovy
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'com.sri.gradle.daikon' version '0.0.2-SNAPSHOT'
 }
 
 repositories {
@@ -42,9 +42,7 @@ dependencies {
     testImplementation 'org.hamcrest:hamcrest:2.2'
     testImplementation 'junit:junit:4.13'
 }
-```
 
-```groovy
 runDaikon {
     outputDir = file("${projectDir}/build/daikon-output")
     // the project directory where daikon.jar, ChicoryPremain.jar,
@@ -55,20 +53,19 @@ runDaikon {
     testDriverPackage = "com.foo"
     // However, if you are not using Randoop, then you need a TestDriver.
     // This TestDriver should have a static void main method, so Daikon can
-    // executed. Having said that, this plugin will automatically generate
-    // this TestDriver for you.
+    // executed. This plugin can generate one for you. Later in this document,
+    // we describe how to do that.
 }
 ```
 
 ## Using a locally-built plugin
 
-You can build the plugin locally rather than downloading it from Maven Central.
+You can build the plug-in locally rather than downloading it from Maven Central.
 
-To build the plugin from source, run `./gradlew build`.
+To build the plug-in from source, run the `./gradlew build` command.
 
-If you want to use a locally-built version of the plugin, you can publish the plugin to your
-local Maven repository by running `./gradlew publishToMavenLocal`. Then, add the following to
-the `settings.gradle` file in the Gradle project that you want to use the plugin:
+If you want to use a locally-built version of the plug-in, you must add the following configuration to
+the `settings.gradle` file of your Gradle project:
 
 ```
 pluginManagement {
@@ -79,18 +76,112 @@ pluginManagement {
 }
 ```
 
+Then, you can publish the plug-in to your local Maven repository simply by running the `./gradlew publishToMavenLocal` command.
+Make sure you run both the `clean` and the `build` tasks before running this command:
+
+```sh
+› ./gradlew clean
+› ./gradlew build
+› ./gradlew publishToMavenLocal
+```
+
+After that, you can use any of the Gradle tasks offered by the Daikon plug-in.
+
 ## Daikon Tasks
 
 The plugin support the following tasks. The main task of this plugin is the `runDaikon` task, which
 runs other supporting tasks, such as `generateTestDriverCode`. The entire list of tasks is presented here:
 
 - `daikonCheck` - Checks if Daikon is in your project's classpath.
+- `daikonEvidence` - Produces an evidence artifact containing the specific details of the Daikon execution.
 - `generateTestDriverCode` - Generates test driver code that Daikon can execute.
 - `runDaikon` - Detection of likely program invariants using Daikon.
 
-Additional build properties:
+**Additional build properties:**
 
--   `-Pdriver` - Tells the plugin to build its own test driver at `build/driver` directory.
+-   `-Pdriver` - Tells the plugin to generate its own test driver at `build/driver` directory.
+
+If the above property is not provided, then the plugin assumes there is already test driver it can use with Daikon.
+
+## An example: Applying the Daikon plug-in to a simple Java project
+
+A simple example of how to use this plugin on a basic Java project can be found at this project's
+`consumer` sub-directory. Here are the steps for using the plugin:
+
+1. Make sure you publish the plugin to Maven local first (See steps above)
+
+If `build` tasks throws an error, try running the used commands with the `--stacktrace` or `--debug` options. E.g.,
+
+```sh
+› ./gradlew clean
+› ./gradlew build --stacktrace
+› ./gradlew publishToMavenLocal
+```
+
+2. Run either `daikonEvidence` or `runDaikon` tasks
+
+If you want to see the plugin in action, you can just run the `runDaikon` task. That should be enough.
+This task will execute Daikon based on the configuration on `build.gradle` file. However, if you want to generate 
+an evidence artifact that provides a summary of a Daikon execution (based on the files generated by `runDaikon`), 
+then you can run the `daikonEvidence` task.
+
+```sh
+› cd consumer
+› ./gradlew daikonEvidence
+```
+
+## Results
+
+The tasks `runDaikon` and `daikonEvidence` generates a few files. The main ones are 
+`*TestDriver.inv.txt` and `daikon-evidence.json`.
+
+Here is a snippet of the first one:
+
+```text
+===========================================================================
+com.foo.Foo:::OBJECT
+===========================================================================
+com.foo.Foo.Foo():::EXIT
+===========================================================================
+com.foo.Foo.mutate():::ENTER
+===========================================================================
+com.foo.Foo.mutate():::EXIT
+===========================================================================
+com.foo.FooManager:::OBJECT
+===========================================================================
+com.foo.FooManager.FooManager(com.foo.Foo):::ENTER
+===========================================================================
+com.foo.FooManager.FooManager(com.foo.Foo):::EXIT
+===========================================================================
+com.foo.FooManager.initialize():::ENTER
+this.foo != null
+===========================================================================
+com.foo.FooManager.initialize():::EXIT
+this.foo == orig(this.foo)
+this.foo != null
+===========================================================================
+```
+
+And here is the second file:
+
+```json
+{
+  "DETAILS": {
+    "AGENT": "DAIKON",
+    "ACTIVITY": "DYNAMIC_ANALYSIS",
+    "CORES": "8",
+    "INVARIANT_COUNT": "3",
+    "PP_COUNT": "669",
+    "DAIKON_OUT": "dev/daikon-gradle-plugin/consumer/build/daikon-output",
+    "MEMORY_AVAILABLE_TO_JVM_IN_BYTES": "500695040",
+    "TEST_DRIVER_PKG": "com.foo",
+    "CLASSES_COUNT": "2",
+    "JVM_MEMORY_LIMIT_IN_BYTES": "500695040",
+    "TESTS_COUNT": "667"
+  }
+}
+```
+
 
 ## License
 

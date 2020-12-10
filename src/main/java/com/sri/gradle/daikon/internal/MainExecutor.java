@@ -80,8 +80,8 @@ public class MainExecutor {
     result.assertNormalExitValue();
   }
 
-  public void execPrintDaikonXml(List<File> classPath, String classNamePrefix, Path outputDir){
-    execPrintDaikonXml(new PrintInvariantsExecSpecAction(
+  public void execPrintDaikonInfo(List<File> classPath, String classNamePrefix, Path outputDir){
+    execPrintDaikonInfo(new PrintInvariantsExecSpecAction(
         project,
         classPath,
         classNamePrefix,
@@ -89,14 +89,14 @@ public class MainExecutor {
     ));
   }
 
-  public void execPrintDaikonXml(Action<PrintInvariantsExecSpec> action){
+  public void execPrintDaikonInfo(Action<PrintInvariantsExecSpec> action){
     Objects.requireNonNull(action);
     final PrintInvariantsExecSpec spec = new PrintInvariantsExecSpec();
     action.execute(spec);
-    execPrintDaikonXml(spec);
+    execPrintDaikonInfo(spec);
   }
 
-  public void execPrintDaikonXml(PrintInvariantsExecSpec printSpec){
+  public void execPrintDaikonInfo(PrintInvariantsExecSpec printSpec){
     Objects.requireNonNull(printSpec);
     final FileCollection fullClasspath = printSpec.getClasspath();
     final ExecResult result = project.javaexec(spec -> {
@@ -245,9 +245,10 @@ public class MainExecutor {
       spec.setWorkingDir(outputDir);
       spec.setClasspath(project.files(classPath));
       spec.setMain(Constants.PRINT_INVARIANTS_MAIN_CLASS);
-      spec.setXmlOutput(outputDir, classNamePrefix + ".inv.xml");
-      spec.setWrapXml();
+      spec.setOutputFile(outputDir, classNamePrefix + ".inv.txt");
+//      spec.setWrapXml();
       spec.setInvariantsFile(outputDir, classNamePrefix + ".inv.gz");
+//      spec.setOutputNumberSamples();
     }
   }
 }

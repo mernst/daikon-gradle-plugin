@@ -3,6 +3,8 @@ package com.sri.gradle.daikon;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
 public class Constants {
@@ -33,6 +35,12 @@ public class Constants {
           ".+Test\\d*|.+Tests\\d*|Test.+|Tests.+|.+IT|.+ITs|.+TestCase\\d*" + "|.+TestCases\\d*");
   public static final String COMPILE_TEST_DRIVER = "compileTestDriverJava";
   public static final String OWN_DRIVER = "driver";
+  public static final String DAIKON_EVIDENCE_TASK = "daikonEvidence";
+  public static final String DAIKON_EVIDENCE_TASK_DESCRIPTION = "Produces an evidence artifact containing the specific details of the Daikon execution.";
+  public static final String DAIKON_DETAILS_FILE_NAME = "daikon-evidence.json";
+  public static final Charset ENCODING = StandardCharsets.UTF_8;
+  public static final String DAIKON_SPLITTER = "=====================";
+  public static final String EVIDENCE_ONLY = "evidence.only";
 
   // tool related constants
   public static final String CHICORY_MAIN_CLASS = "daikon.Chicory";

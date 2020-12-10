@@ -5,6 +5,7 @@ import com.sri.gradle.daikon.extensions.DaikonPluginExtension;
 import com.sri.gradle.daikon.tasks.AbstractNamedTask;
 import com.sri.gradle.daikon.tasks.CheckForDaikon;
 import com.sri.gradle.daikon.tasks.CompileTestJavaTaskMutator;
+import com.sri.gradle.daikon.tasks.DaikonEvidence;
 import com.sri.gradle.daikon.tasks.RunDaikon;
 import com.sri.gradle.daikon.tasks.SourceGeneratingTask;
 import com.sri.gradle.daikon.utils.JavaProjectHelper;
@@ -14,6 +15,7 @@ import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -37,9 +39,16 @@ public class DaikonPlugin implements Plugin<Project> {
     checkDaikonInstallation.dependsOn(configuredJavaCompileTask);
 
     final RunDaikon mainTask = createRunDaikonTask(project, extension);
-    mainTask.dependsOn("build", checkDaikonInstallation);
+    mainTask.getOutputs().upToDateWhen(spec -> false);
+    if (project.hasProperty(Constants.OWN_DRIVER)){
+      mainTask.dependsOn(JavaBasePlugin.BUILD_TASK_NAME, checkDaikonInstallation);
+    } else {
+      mainTask.dependsOn(checkDaikonInstallation);
+    }
 
-    project.getLogger().quiet("Executing " + mainTask.getName());
+    final DaikonEvidence daikonEvidence = createDaikonEvidenceTask(project, extension);
+    daikonEvidence.getOutputs().upToDateWhen(spec -> false);
+    project.getLogger().quiet("Applied Daikon Gradle plugin");
   }
 
   private RunDaikon createRunDaikonTask(Project project, DaikonPluginExtension extension) {
@@ -52,6 +61,16 @@ public class DaikonPlugin implements Plugin<Project> {
     mainTask.getTestDriverPackage().set(extension.getTestDriverPackage());
 
     return mainTask;
+  }
+
+  private DaikonEvidence createDaikonEvidenceTask(Project project, DaikonPluginExtension extension) {
+    final DaikonEvidence daikonEvidence = project.getTasks().create(Constants.DAIKON_EVIDENCE_TASK, DaikonEvidence.class);
+    daikonEvidence.setGroup(Constants.GROUP);
+    daikonEvidence.setDescription(Constants.DAIKON_EVIDENCE_TASK_DESCRIPTION);
+
+    daikonEvidence.getOutputDir().set(extension.getOutputDir());
+    daikonEvidence.getTestDriverPackage().set(extension.getTestDriverPackage());
+    return daikonEvidence;
   }
 
   private CheckForDaikon createCheckForDaikonTask(Project project) {

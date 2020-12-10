@@ -7,11 +7,15 @@ public class PrintInvariantsExecSpec extends MainExecSpec {
     args(String.format("%s", relativizeFile(directory, filename)));
   }
 
-  public void setXmlOutput(Path directory, String filename) {
+  public void setOutputFile(Path directory, String filename) {
     args("--output", String.format("%s", relativizeFile(directory, filename)));
   }
 
   public void setWrapXml(){
     args("--wrap_xml");
+  }
+
+  public void setOutputNumberSamples(){
+    args("--output_num_samples");
   }
 }
