@@ -49,12 +49,12 @@ runDaikon {
     // and dcomp_*.jar files exist  
     requires = file("libs")
     // *TestDriver package name
-    // If you use Randoop, then Randoop will generate this TestDriver for you.
+    // The Daikon tool requires a test driver. If you use Randoop,
+    // then Randoop will generate one for you.
     testDriverPackage = "com.foo"
-    // However, if you are not using Randoop, then you need a TestDriver.
-    // This TestDriver should have a static void main method, so Daikon can
-    // executed. This plugin can generate one for you. Later in this document,
-    // we describe how to do that.
+    // Otherwise, you need to tell this plugin to create one for you.
+    // The instructions for how to do this are described later in this
+    // README file.
 }
 ```
 
@@ -167,17 +167,24 @@ And here is the second file:
 ```json
 {
   "DETAILS": {
-    "AGENT": "DAIKON",
+    "PP_COUNT": "5",
+    "TEST_DRIVER": "src/test/java/com/foo/RegressionTestDriver.java",
+    "DATE": "2021-3-4",
     "ACTIVITY": "DYNAMIC_ANALYSIS",
-    "CORES": "8",
-    "INVARIANT_COUNT": "3",
-    "PP_COUNT": "669",
-    "DAIKON_OUT": "dev/daikon-gradle-plugin/consumer/build/daikon-output",
-    "MEMORY_AVAILABLE_TO_JVM_IN_BYTES": "500695040",
-    "TEST_DRIVER_PKG": "com.foo",
-    "CLASSES_COUNT": "2",
-    "JVM_MEMORY_LIMIT_IN_BYTES": "500695040",
-    "TESTS_COUNT": "667"
+    "AGENT": "DAIKON",
+    "MEMORY_AVAILABLE_TO_JVM_IN_BYTES": "354942976",
+    "CLASSES_COUNT": "1",
+    "JVM_MEMORY_LIMIT_IN_BYTES": "477626368",
+    "INVARIANT_COUNT": "0",
+    "SUPPORT_FILES": [
+      "build/daikon-output/RegressionTestDriver.dtrace.gz",
+      "build/daikon-output/RegressionTestDriver.decls-DynComp",
+      "build/daikon-output/RegressionTestDriver.inv.gz"
+    ],
+    "TEST_DRIVER_PACKAGE": "com.foo",
+    "TESTS_COUNT": "4",
+    "CORES": "16",
+    "INVARIANTS_FILE": "build/daikon-output/RegressionTestDriver.inv.txt"
   }
 }
 ```

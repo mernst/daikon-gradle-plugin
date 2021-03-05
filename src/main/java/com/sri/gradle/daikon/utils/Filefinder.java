@@ -77,6 +77,20 @@ public class Filefinder {
   }
 
   /**
+   * List all  files found in a directory. Skip those ones matching the provide skip hints.
+   * Avoids using classloaders.
+   *
+   * @param directory directory to access
+   * @param exclude hints for files to be excluded in the directory.
+   * @return the list of files in the directory.
+   */
+  public static List<File> findAnyFiles(Path directory, String... exclude) {
+    if (!Files.exists(directory)) return ImmutableList.of();
+
+    return findFiles(directory.toFile(), Dot.ANY, exclude);
+  }
+
+  /**
    * List all Java files found in a directory. Skip those ones matching the provide skip hints.
    *
    * @param directory directory to access
@@ -153,7 +167,8 @@ public class Filefinder {
     JAVA(FileSystems.getDefault().getPathMatcher("glob:*.java"), "java"),
     CLASS(FileSystems.getDefault().getPathMatcher("glob:*.class"), "class"),
     JAR(FileSystems.getDefault().getPathMatcher("glob:*.jar"), "jar"),
-    TXT(FileSystems.getDefault().getPathMatcher("glob:*.txt"), "txt");
+    TXT(FileSystems.getDefault().getPathMatcher("glob:*.txt"), "txt"),
+    ANY(FileSystems.getDefault().getPathMatcher("glob:*.*"), "*");
 
     private final PathMatcher matcher;
     private final String ext;

@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 public class MoreFiles {
   private MoreFiles() {
@@ -16,10 +18,11 @@ public class MoreFiles {
 
   /**
    * Gets count of files in a directory
+   *
    * @param dir current directory
    * @return count of files in directory
    */
-  public static int fileCount(Path dir){
+  public static int fileCount(Path dir) {
     try {
       return Iterables.size(Files.newDirectoryStream(dir));
     } catch (IOException ignored) {
@@ -57,16 +60,26 @@ public class MoreFiles {
   }
 
   public static String getClassName(String baseDirPath, String subdir, String dotExt) {
-    String deletingPrefix =
-        baseDirPath.substring(0, baseDirPath.indexOf(subdir));
+    String deletingPrefix = baseDirPath.substring(0, baseDirPath.indexOf(subdir));
     deletingPrefix = (deletingPrefix + subdir) + Constants.FILE_SEPARATOR;
 
     String trimmedCanonicalPath = baseDirPath.replace(deletingPrefix, "");
-    trimmedCanonicalPath = trimmedCanonicalPath.endsWith(dotExt)
-        ? trimmedCanonicalPath
-        .replaceAll(dotExt, "")
-        .replaceAll(Constants.FILE_SEPARATOR, ".")
-        : trimmedCanonicalPath;
+    trimmedCanonicalPath =
+        trimmedCanonicalPath.endsWith(dotExt)
+            ? trimmedCanonicalPath.replaceAll(dotExt, "").replaceAll(Constants.FILE_SEPARATOR, ".")
+            : trimmedCanonicalPath;
     return trimmedCanonicalPath;
+  }
+
+  public static Set<File> getMatchingJavaFiles(Path targetDir, Pattern nameRegExp) {
+    Objects.requireNonNull(targetDir);
+    Objects.requireNonNull(nameRegExp);
+
+    final List<File> allJavaFiles = Filefinder.findJavaFiles(targetDir);
+
+    return ImmutableStream.setCopyOf(
+        allJavaFiles.stream()
+            .filter(f -> Files.exists(f.toPath()))
+            .filter(f -> nameRegExp.asPredicate().test(f.getName())));
   }
 }
