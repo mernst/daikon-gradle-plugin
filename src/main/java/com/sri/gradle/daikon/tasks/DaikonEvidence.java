@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sri.gradle.daikon.Constants;
+import com.sri.gradle.daikon.internal.CsvWriter;
 import com.sri.gradle.daikon.utils.Filefinder;
 import com.sri.gradle.daikon.utils.ImmutableStream;
 import com.sri.gradle.daikon.utils.JavaProjectHelper;
@@ -26,6 +27,16 @@ import java.util.*;
 
 @SuppressWarnings("UnstableApiUsage")
 public class DaikonEvidence extends AbstractNamedTask {
+  private static final String METRICS = "DaikonInvsAndMetrics";
+  private static final String CONFIG = "DaikonPluginConfig";
+  private static final String QUALIFICATION = "DaikonPluginQualification";
+
+  private static final Map<String, CsvProcessor> CSVPROCESSORS = ImmutableMap.of(
+      METRICS, new MetricsProcessor(),
+      CONFIG, new ConfigProcessor(),
+      QUALIFICATION, new QualificationProcessor()
+  );
+
   private final DirectoryProperty outputDir;
   private final Property<String> testDriverPackage;
 
@@ -36,6 +47,23 @@ public class DaikonEvidence extends AbstractNamedTask {
 
   @TaskAction
   public void daikonEvidence() {
+    // main data structure
+    final Map<String, Map<String, Object>> evidence = new HashMap<>();
+    initEvidence(evidence);
+
+
+    // qualification data
+    final Map<String, Object> qualification = new HashMap<>();
+    qualification.put("TITLE", "DaikonGradlePlugin");
+    qualification.put("SUMMARY", "Runs the Daikon Tool");
+    qualification.put("QUALIFIEDBY", "SRI International");
+    qualification.put("USERGUIDE", "https://github.com/SRI-CSL/daikon-gradle-plugin/blob/master/README.md");
+    qualification.put("INSTALLATION", "https://github.com/SRI-CSL/daikon-gradle-plugin/blob/master/README.md");
+    qualification.put("ACTIVITY", "Dynamic Analysis");
+
+    final Map<String, Object> metrics = new HashMap<>();
+    final Map<String, Object> config = new HashMap<>();
+
     final File daikonOutputDir = getOutputDir().getAsFile().get();
     final List<File> allTxtFiles = Filefinder.findTextFiles(daikonOutputDir.toPath());
     Optional<Path> invsFile =
@@ -51,6 +79,7 @@ public class DaikonEvidence extends AbstractNamedTask {
     }
 
     final Path workingDir = getProject().getProjectDir().toPath();
+    config.put("OUTPUT_DIR", workingDir.relativize(daikonOutputDir.toPath()).toString());
 
     final Path actualInvsFile = invsFile.get();
     final Path daikonEvidenceFile = workingDir.resolve(Constants.DAIKON_DETAILS_FILE_NAME);
@@ -63,28 +92,26 @@ public class DaikonEvidence extends AbstractNamedTask {
 
     final String matchKey = getTestDriverPackage().get();
 
-    final Map<String, Object> processedRecords = new IdentityHashMap<>();
-    processedRecords.put("ACTIVITY", "DYNAMIC_ANALYSIS");
-    processedRecords.put("AGENT", "DAIKON");
-
     final List<String> daikonOutFiles = ImmutableStream.listCopyOf(Filefinder.findAnyFiles(
             daikonOutputDir.toPath(), "inv.txt").stream()
             .map(f -> workingDir.relativize(f.toPath()).toString()));
 
-    processedRecords.put("SUPPORT_FILES", daikonOutFiles);
-    processedRecords.put("TEST_DRIVER_PACKAGE", matchKey);
-    processedRecords.put("CORES", String.valueOf(Runtime.getRuntime().availableProcessors()));
+
+    config.put("TEST_DRIVER_PACKAGE", matchKey);
+
+    metrics.put("SUPPORT_FILES", daikonOutFiles);
+    metrics.put("CORES", String.valueOf(Runtime.getRuntime().availableProcessors()));
 
     // This will return Long.MAX_VALUE if there is no preset limit
     long maxMemory = Runtime.getRuntime().maxMemory();
-    processedRecords.put(
+    metrics.put(
         "JVM_MEMORY_LIMIT_IN_BYTES",
         (maxMemory == Long.MAX_VALUE ? "no limit" : String.valueOf(maxMemory)));
-    processedRecords.put(
+    metrics.put(
         "MEMORY_AVAILABLE_TO_JVM_IN_BYTES", String.valueOf(Runtime.getRuntime().totalMemory()));
 
     // Invariants file
-    processedRecords.put("INVARIANTS_FILE", workingDir.relativize(actualInvsFile).toString());
+    metrics.put("INVARIANTS_FILE", workingDir.relativize(actualInvsFile).toString());
 
     final JavaProjectHelper helper = new JavaProjectHelper(getProject());
     final Path driverDir = helper.getDriverDir().toPath();
@@ -94,7 +121,7 @@ public class DaikonEvidence extends AbstractNamedTask {
     // anywhere you want to, via the 'junitOutputDir' field. The former is easier for we
     // control where the driver should be placed. Having said, we check the former first.
     if (Constants.TEST_DRIVER_CLASSNAME.equals(mainClass)) {
-      processedRecords.put(
+      metrics.put(
           "TEST_DRIVER",
           workingDir
               .relativize(driverDir.resolve(Constants.TEST_DRIVER_CLASSNAME + ".java"))
@@ -114,25 +141,37 @@ public class DaikonEvidence extends AbstractNamedTask {
           .findFirst()
           .ifPresent(
               testDriverJavaFile ->
-                  processedRecords.put(
+                      metrics.put(
                       "TEST_DRIVER", workingDir.relativize(testDriverJavaFile.toPath()).toString()));
     }
 
     final LocalDate dateNow = LocalDate.now();
-    processedRecords.put("DATE", String.format("%d-%d-%d", dateNow.getYear(), dateNow.getMonthValue(), dateNow.getDayOfMonth()));
+    qualification.put("DATE", String.format("%d-%d-%d", dateNow.getYear(), dateNow.getMonthValue(), dateNow.getDayOfMonth()));
 
     final ReadWriteDaikonDetails evidenceWriter =
         new ReadWriteDaikonDetails(actualInvsFile, daikonEvidenceFile, matchKey);
 
     try {
-      processedRecords.putAll(evidenceWriter.processLineByLine());
-      evidenceWriter.writeToOutput(processedRecords);
-      getLogger().debug(processedRecords.size() + " records extracted.");
+      metrics.putAll(evidenceWriter.processLineByLine());
+
+      evidence.put(METRICS, metrics);
+      evidence.put(QUALIFICATION, qualification);
+      evidence.put(CONFIG, config);
+
+      evidenceWriter.writeToJson(evidence);
+      evidenceWriter.writeCsv(evidence);
+      getLogger().debug("Generated metric, tool configuration, and qualification data.");
     } catch (IOException ioe) {
       throw new GradleException("Unable to process " + actualInvsFile, ioe);
     }
 
     getLogger().quiet("Successfully generated evidence file: " + daikonEvidenceFile.getFileName());
+  }
+
+  private static void initEvidence(Map<String, Map<String, Object>> evidenceObjectMap){
+    evidenceObjectMap.put(METRICS, new HashMap<>());
+    evidenceObjectMap.put(CONFIG, new HashMap<>());
+    evidenceObjectMap.put(QUALIFICATION, new HashMap<>());
   }
 
   @OutputDirectory
@@ -225,10 +264,10 @@ public class DaikonEvidence extends AbstractNamedTask {
       return ImmutableMap.copyOf(details);
     }
 
-    void writeToOutput(Map<String, Object> otherRecord) throws IOException {
+    void writeToJson(Map<String, Map<String, Object>> evidence) throws IOException {
 
-      final Map<String, Map<String, Object>> jsonDoc = new HashMap<>();
-      jsonDoc.put("DETAILS", otherRecord);
+      final Map<String, Map<String, Map<String, Object>>> jsonDoc = new HashMap<>();
+      jsonDoc.put("Evidence", evidence);
 
       Files.deleteIfExists(outFile);
 
@@ -236,6 +275,75 @@ public class DaikonEvidence extends AbstractNamedTask {
       try (Writer writer = Files.newBufferedWriter(outFile)) {
         gson.toJson(jsonDoc, writer);
       }
+    }
+
+    void writeCsv(Map<String, Map<String, Object>> evidence){
+      final Path workingDir = outFile.getParent();
+      for (String each : evidence.keySet()){
+        final Map<String, Object> recordMap = evidence.get(each);
+        final CsvProcessor processor = CSVPROCESSORS.getOrDefault(each, null);
+        if (processor == null) continue;
+        processor.process(recordMap, workingDir);
+      }
+    }
+  }
+
+  public static class Record {
+    String key;
+    Object val;
+    Record(String key, Object val){
+      this.key = key;
+      this.val = val;
+    }
+
+    public String getKey() {
+      return key;
+    }
+
+    public Object getVal() {
+      return val;
+    }
+
+    @Override
+    public String toString() {
+      return key + ":" + val.toString();
+    }
+  }
+
+  interface CsvProcessor {
+    void process(Map<String, Object> record, Path outputDir);
+    default Set<Record> recordSet(Map<String, Object> record){
+      final Set<Record> records = new HashSet<>();
+      for (String each : record.keySet()){
+        Object value = record.get(each);
+        final Record r = new Record(each, value);
+        records.add(r);
+      }
+      return records;
+    }
+  }
+
+  static class MetricsProcessor implements CsvProcessor {
+    @Override
+    public void process(Map<String, Object> record, Path outputDir) {
+      final StringBuilder sb = new StringBuilder();
+      CsvWriter.writeCsv(outputDir, "DaikonInvsAndMetrics.csv", sb, recordSet(record));
+    }
+  }
+
+  static class ConfigProcessor implements CsvProcessor {
+    @Override
+    public void process(Map<String, Object> record, Path outputDir) {
+      final StringBuilder sb = new StringBuilder();
+      CsvWriter.writeCsv(outputDir, "DaikonPluginConfig.csv", sb, recordSet(record));
+    }
+  }
+
+  static class QualificationProcessor implements CsvProcessor {
+    @Override
+    public void process(Map<String, Object> record, Path outputDir) {
+      final StringBuilder sb = new StringBuilder();
+      CsvWriter.writeCsv(outputDir, "DaikonPluginQualification.csv", sb, recordSet(record));
     }
   }
 }

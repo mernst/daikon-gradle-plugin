@@ -133,7 +133,9 @@ then you can run the `daikonEvidence` task.
 ## Results
 
 The tasks `runDaikon` and `daikonEvidence` generates a few files. The main ones are 
-`*TestDriver.inv.txt` and `daikon-evidence.json`.
+`*TestDriver.inv.txt`, `daikon-evidence.json`. It also produces three CSV files:
+`DaikonInvsAndMetrics.csv`, `DaikonPluginConfig`, and `DaikonPluginQualification.csv`.
+The `daikon-evidence.json` file aggregates all the information in the other `CSV` files.
 
 Here is a snippet of the first one:
 
@@ -166,25 +168,36 @@ And here is the second file:
 
 ```json
 {
-  "DETAILS": {
-    "PP_COUNT": "5",
-    "TEST_DRIVER": "src/test/java/com/foo/RegressionTestDriver.java",
-    "DATE": "2021-3-4",
-    "ACTIVITY": "DYNAMIC_ANALYSIS",
-    "AGENT": "DAIKON",
-    "MEMORY_AVAILABLE_TO_JVM_IN_BYTES": "354942976",
-    "CLASSES_COUNT": "1",
-    "JVM_MEMORY_LIMIT_IN_BYTES": "477626368",
-    "INVARIANT_COUNT": "0",
-    "SUPPORT_FILES": [
-      "build/daikon-output/RegressionTestDriver.dtrace.gz",
-      "build/daikon-output/RegressionTestDriver.decls-DynComp",
-      "build/daikon-output/RegressionTestDriver.inv.gz"
-    ],
-    "TEST_DRIVER_PACKAGE": "com.foo",
-    "TESTS_COUNT": "4",
-    "CORES": "16",
-    "INVARIANTS_FILE": "build/daikon-output/RegressionTestDriver.inv.txt"
+  "Evidence": {
+    "DaikonPluginConfig": {
+      "OUTPUT_DIR": "build/daikon-output",
+      "TEST_DRIVER_PACKAGE": "com.foo"
+    },
+    "DaikonPluginQualification": {
+      "DATE": "2021-3-30",
+      "SUMMARY": "Runs the Daikon Tool",
+      "QUALIFIEDBY": "SRI International",
+      "INSTALLATION": "https://github.com/SRI-CSL/daikon-gradle-plugin/blob/master/README.md",
+      "USERGUIDE": "https://github.com/SRI-CSL/daikon-gradle-plugin/blob/master/README.md",
+      "TITLE": "DaikonGradlePlugin",
+      "ACTIVITY": "Dynamic Analysis"
+    },
+    "DaikonInvsAndMetrics": {
+      "CORES": "16",
+      "JVM_MEMORY_LIMIT_IN_BYTES": "477626368",
+      "SUPPORT_FILES": [
+        "build/daikon-output/RegressionTestDriver.dtrace.gz",
+        "build/daikon-output/RegressionTestDriver.decls-DynComp",
+        "build/daikon-output/RegressionTestDriver.inv.gz"
+      ],
+      "PP_COUNT": "5",
+      "INVARIANTS_FILE": "build/daikon-output/RegressionTestDriver.inv.txt",
+      "MEMORY_AVAILABLE_TO_JVM_IN_BYTES": "432013312",
+      "CLASSES_COUNT": "1",
+      "TEST_DRIVER": "src/test/java/com/foo/RegressionTestDriver.java",
+      "TESTS_COUNT": "4",
+      "INVARIANT_COUNT": "0"
+    }
   }
 }
 ```
