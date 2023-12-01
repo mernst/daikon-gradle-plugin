@@ -88,7 +88,7 @@ public class TaskExecutorImpl implements TaskExecutor {
 
     if (mainClass == null) {
       throw new TaskConfigurationError(
-          "DynComp/Chicory operations require a non-null main class.");
+          "DynComp/Chicory operations require a non-null main class. allClassNames=" + allClassNames);
     }
 
     mainClass = mainClass.endsWith(".class")
