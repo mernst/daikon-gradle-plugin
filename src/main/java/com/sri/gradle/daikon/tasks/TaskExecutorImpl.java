@@ -54,6 +54,7 @@ public class TaskExecutorImpl implements TaskExecutor {
     }
   }
 
+  // Executes DynComp, Chicory, and Daikon, then prints invariants.
   private static void applyBuiltConfiguration(TaskBuilderImpl each) {
     final Path classesDir = each.getTestClassesDir().toPath();
     final Path outputDir = each.getOutputDir();

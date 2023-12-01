@@ -82,7 +82,7 @@ public class RunDaikon extends AbstractNamedTask {
     final RunDaikonConfiguration config =
         new RunDaikonConfiguration(inputDir, testDriverPackage, getProject(), classpath, outputDir);
 
-    getLogger().debug("Created RunDaikon task configuration");
+    getLogger().debug("Created RunDaikon task configuration: " + config);
     executor.install(config);
     getLogger().debug("Configured RunDaikon task");
 
@@ -145,6 +145,20 @@ public class RunDaikon extends AbstractNamedTask {
               : runDaikonOn(new InputProviderImpl(inputDir, testDriverPackage, project));
 
       builder.withClasspath(classpath).toDir(outputDir);
+    }
+
+    @Override
+    public String toString() {
+      return
+          "RunDaikonConfiguration{"
+          + String.join(", ",
+                        "inputDir=" + inputDir,
+                        "testDriverPackage="  + testDriverPackage,
+                        "project=" + project,
+                        "classpath=" + classpath,
+                        "outputDir=" + outputDir)
+          +
+          "}";
     }
   }
 
