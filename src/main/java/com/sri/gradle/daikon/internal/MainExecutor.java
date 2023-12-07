@@ -77,7 +77,14 @@ public class MainExecutor {
       daikonSpec.getConfigureFork().forEach(forkAction -> forkAction.execute(spec));
     });
 
-    result.assertNormalExitValue();
+    if (result.toString().contains("Usage:")){
+      project.getLogger().debug("Checking daikon.jar is in the classpath; "
+          + "no need to assert normal exit value");
+    } else {
+      // assert this only after executing 'daikonCheck'
+      result.assertNormalExitValue();
+    }
+
   }
 
   public void execPrintDaikonInfo(List<File> classPath, String classNamePrefix, Path outputDir){
